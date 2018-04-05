@@ -6,6 +6,8 @@ cd
 # clone the repositiry  
 [[ -d 'AIY-projects-python' ]] || git clone https://github.com/google/aiyprojects-raspbian.git AIY-projects-python
 
+cd AIY-projects-python/
+
 # setup python virtual env
 [[ -d 'env' ]] || {
   sudo apt-get install python-virtualenv
@@ -14,7 +16,6 @@ cd
 
 # switch to virtual env
 source env/bin/activate
-cd AIY-projects-python/
 
 # install dependencies
 [[ -f 'install.done' ]] || {
