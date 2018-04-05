@@ -25,7 +25,7 @@ cd AIY-projects-python/
   sudo scripts/install-alsa-config.sh
   touch install.done
   echo 'going for a reboot now, please rerun this script after reboot'
-  reboot
+  sudo reboot
 }
 
 # configure driver
@@ -34,7 +34,7 @@ cd AIY-projects-python/
   sudo scripts/configure-driver.sh
   touch configure.done
   echo 'going for a reboot now, please rerun this script after reboot'
-  reboot
+  sudo reboot
 }
 
 # check audio
