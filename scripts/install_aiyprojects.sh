@@ -65,8 +65,7 @@ source env/bin/activate
  }
 
 # start demo
-stage=$(read_stage)
-[[ ${stage} -lt 4 ]] && {
+[[ $(read_stage) -lt 4 ]] && {
   if [[ -f ~/assistant.json ]]; then
     python3 src/examples/voice/assistant_library_with_button_demo.py
     update_stage
@@ -81,7 +80,7 @@ stage=$(read_stage)
 }
 
 # make headless
-[[ ${stage} -lt 5 ]] && {
+[[ $(read_stage) -lt 5 ]] && {
   read -n1 -rsp $'Press spacebar or enter to enable headless start, any other key to skip or Ctrl+C to exit...\n' key
   [[ -z ${key} ]] && {
     cp src/examples/voice/assistant_library_with_button_demo.py src/main.py
