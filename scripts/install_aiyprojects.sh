@@ -5,14 +5,7 @@
 read_stage() { [[ -f ${flag} ]] && head -n 1 ${flag} | tr -d \n || echo -n 0 ;}
 update_stage() { echo -n $((${stage}+1)) >${flag} ;}
 reboot_nicely() {
-  cat <<<"""Going to reboot in 60 seconds.
-  Note:
-    In case the raspbian menu bar is not visible after reboot, remove lxpanel directory and reboot.
-    open a terminal Ctrl+Alt+T or Ctrl+Alt+F1
-    rm -rf ~/.config/lxpanel
-    sudo reboot
-  """
-  read -t60 -n1 -rsp $'press any key to reboot immediately or Ctrl+C to exit...\n' response || true
+  read -t60 -n1 -rsp $'Going to reboot in 60 seconds, press any key to reboot immediately or Ctrl+C to exit...\n' response || true
   update_stage
   sudo reboot
 }
@@ -23,7 +16,15 @@ cd # switch to home dir
 flag=~/.$(basename $0).done # use dot file in home dir to keep track of stages
 stage=$(read_stage) # read the last reached stage
 
-# clone the repositiry
+[[ ${stage} -gt 0 && ${stage} -lt 3 ]] && {
+    read -t60 -n1 -rsp $'Press any key to fix raspbian menu bar is not visible, spacebar or enter to skip or Ctrl+C to exit...\n' fix || true
+    [[ -z ${fix} ]] || {
+        rm -rf ~/.config/lxpanel
+        sudo reboot
+    }
+}
+
+# clone the repository
 [[ -d 'AIY-projects-python' ]] || git clone https://github.com/google/aiyprojects-raspbian.git AIY-projects-python
 
 cd AIY-projects-python/
@@ -83,7 +84,10 @@ source env/bin/activate
 [[ $(read_stage) -lt 5 ]] && {
   read -n1 -rsp $'Press spacebar or enter to enable headless start, any other key to skip or Ctrl+C to exit...\n' key
   [[ -z ${key} ]] && {
-    cp src/examples/voice/assistant_library_with_button_demo.py src/main.py
+    [[ -f src/main.py ]] || {
+        echo "will setup assistant_library_with_button_demo for headless start"
+        cp src/examples/voice/assistant_library_with_button_demo.py src/main.py
+    }
     sudo bash -c """
     systemctl enable voice-recognizer
     systemctl start voice-recognizer
