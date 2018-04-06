@@ -45,7 +45,7 @@ update_stage() { stage=$((${stage}+1)); echo -n ${stage} >${flag} ;}
 # to maintain consistency in user interaction
 ask_user() {
     echo -n -e "Waiting 60 secs for you to:\n\t hit \033[1m[space]\033[0m or \033[1m[enter]\033[0m to \033[1m$1\033[0m"
-    echo -n -e " (default)\t OR type any other key to $2 OR press Ctrl+C to exit"
+    echo -n -e " (default) OR type any other key to $2 OR press Ctrl+C to exit"
     trap 'exit 129' SIGINT
     read -t60 -n1 -rsp $'...\n' key || true
     trap - SIGINT
