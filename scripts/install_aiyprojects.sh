@@ -4,6 +4,9 @@
 #    Based partly on instructions at https://github.com/google/aiyprojects-raspbian/blob/aiyprojects/HACKING.md
 #    Author: Vikas Munshi <vikas.munshi@gmail.com>
 #    Version 1.0: 2018.04.06
+#    Source: https://github.com/vikasmunshi/python-scripts/blob/master/scripts/install_aiyprojects.sh
+#    s
+#    https://raw.githubusercontent.com/vikasmunshi/python-scripts/master/scripts/install_aiyprojects.sh
 ########################################################################################################################
 #    MIT License
 #
@@ -36,11 +39,21 @@ read_stage() { [[ -f ${flag} ]] && head -n 1 ${flag} | tr -d \n || echo -n 0 ;}
 # add one to current stage and write to flag file
 update_stage() { stage=$((${stage}+1)); echo -n ${stage} >${flag} ;}
 
+# to maintain consistency in user interaction
+ask_user() {
+    echo -e "Hit [space] or [enter] to $1, press any other key to $2 or Ctrl+C to exit"
+    echo -n -e "... will wait 60 seconds before $3 ..."
+    trap 'exit 129' SIGINT
+    read -t60 -n1 -rsp $'\n' key || true
+    trap - SIGINT
+    [[ -z ${key} ]] && return 0 || return 1
+}
+
 # update stage, inform the user allowing intervention and go for a reboot
 reboot_nicely() {
     update_stage
-    read -t60 -n1 -rsp $'Going to reboot in 60 seconds, press any key to reboot now or Ctrl+C to exit...\n' _ || true
-    sudo reboot
+    ask_user 'reboot now' 'skip rebooting' 'rebooting'
+    [[ $? -eq 0 ]] && sudo reboot || exit 0
 }
 
 # terminate script on error; switch to home dir, rest of the script uses relative paths
@@ -50,18 +63,15 @@ cd
 # use dot file in home dir as flag file to keep track of stages and read the last known stage
 flag=~/.$(basename $0).done
 stage=$(read_stage)
-
+echo ${flag}
+ask_user 'happy' 'sad' 'nothing'
+exit 0
 # Workaround for issue that sometimes crashes Raspbian Menu-bar on reboot
 # Fix is to delete the current user lxpanel config and reboot
 # Restarting the X session (rebooting) will create a new lxpanel config file and the menu bar should be visible again.
 [[ ${stage} -gt 0 && ${stage} -lt 3 ]] && {
-    echo 'Press any key to fix Raspbian Menu-bar not visible, space-bar or enter to skip or Ctrl+C to exit...'
-    echo "fix will delete ~/.config/lxpanel and reboot"
-    read -t60 -n1 -rs fix || true
-    [[ -z ${fix} ]] || {
-        sudo rm -rf ~/.config/lxpanel
-        sudo reboot
-    }
+    ask_user 'continue' 'fix Raspbian Menu-bar not visible and reboot' 'continuing'
+    [[ $? -eq 0 ]] || { sudo rm -rf ~/.config/lxpanel; sudo reboot ;}
 }
 # TODO - remove above workaround when no longer needed
 
@@ -105,9 +115,8 @@ source env/bin/activate
 [[ ${stage} -lt 3 ]] && {
     # check audio
     python3 checkpoints/check_audio.py
-    echo 'Press space-bar or enter to confirm speaker and microphone work, any other key otherwise or Ctrl+C to exit...'
-    read -t60 -n1 -rs confirm_check_audio || true
-    [[ -z ${confirm_check_audio} ]] || exit 1
+    ask_user 'confirm speaker and microphone work' 'indicate otherwise' 'assuming tests worked'
+    [[ $? -eq 0 ]] || exit 1
 
     # start demo
     if [[ -f ~/assistant.json ]]; then
@@ -125,17 +134,13 @@ source env/bin/activate
 
 # make headless
 [[ ${stage} -lt 4 ]] && {
-  read -n1 -rsp $'Press space-bar or enter to enable headless start, any other key to skip or Ctrl+C to exit...\n' key
-  [[ -z ${key} ]] && {
-    [[ -f src/main.py ]] || {
-        echo "will setup assistant_library_with_button_demo for headless start"
-        cp src/examples/voice/assistant_library_with_button_demo.py src/main.py
-    }
+    ask_user 'enable headless start' 'skip' 'enabling headless start'
+    [[ $? -eq 0 ]] || exit 0
+    [[ -f src/main.py ]] || cp src/examples/voice/assistant_library_with_button_demo.py src/main.py
     sudo bash -c """
     systemctl enable voice-recognizer
     systemctl start voice-recognizer
     systemctl status voice-recognizer
     """
     update_stage
-  }
 }
