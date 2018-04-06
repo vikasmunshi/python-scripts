@@ -61,6 +61,8 @@ set -e
 cd
 
 # use dot file in home dir as flag file to keep track of stages and read the last known stage
+[[ -f $0 ]] && echo 'regular file'
+stat $0
 flag=~/.$(basename $0).done
 stage=$(read_stage)
 echo ${flag}
