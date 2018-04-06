@@ -44,8 +44,8 @@ update_stage() { stage=$((${stage}+1)); echo -n ${stage} >${flag} ;}
 
 # to maintain consistency in user interaction
 ask_user() {
-    echo -n -e "Waiting 60 seconds for you to:\n\t hit \e[1[space]\e[0m or \e[1[enter]\e[0m to \e[1$1\e[0m (default)"
-    echo -n -e "\t OR type any other key to $2 OR press Ctrl+C to exit"
+    echo -n -e "Waiting 60 seconds for you to:\n\t hit \033[1[space]\033[0m or \033[1[enter]\033[0m to \033[1$1\033[0m"
+    echo -n -e " (default)\t OR type any other key to $2 OR press Ctrl+C to exit"
     trap 'exit 129' SIGINT
     read -t60 -n1 -rsp $'...\n' key || true
     trap - SIGINT
@@ -55,7 +55,7 @@ ask_user() {
 # update stage, inform the user allowing intervention and go for a reboot
 reboot_nicely() {
     update_stage
-    echo -e '\e[1m\e[5mTo complete setup, please rerun this script after reboot.\e[0m'
+    echo -e '\033[1m\033[5mTo complete setup, please rerun this script after reboot.\033[0m'
     ask_user 'reboot now' 'skip rebooting'
     [[ $? -eq 0 ]] && sudo reboot || exit 0
 }
