@@ -44,8 +44,8 @@ update_stage() { stage=$((${stage}+1)); echo -n ${stage} >${flag} ;}
 
 # to maintain consistency in user interaction
 ask_user() {
-    echo -n -e "Waiting 60 secs for you to:\n\t hit \033[1m[space]\033[0m or \033[1m[enter]\033[0m to \033[1m$1\033[0m"
-    echo -n -e " (default) OR type any other key to $2 OR press Ctrl+C to exit"
+    echo -n -e "Waiting 60 secs for you to:\n\t hit \033[1m[space]\033[0m or \033[1m[enter]\033[0m to \033[1m$1\033[0m "
+    echo -n -e "(default) OR type \033[1many other key\033[0m to \033[1m$2\033[0m OR press \033[1mCtrl+C to exit\033[0m"
     trap 'exit 129' SIGINT
     read -t60 -n1 -rsp $'...\n' key || true
     trap - SIGINT
@@ -63,8 +63,6 @@ reboot_nicely() {
 # terminate script on error; switch to home dir, rest of the script uses relative paths
 set -e
 cd
-ask_user 'choice 1' 'choice 2'
-exit 0
 
 # use dot file in home dir as flag file to keep track of stages and read the last known stage
 [[ -f $0 ]] && flag=~/.$(basename $0).done || flag=~/.install_aiyprojects.sh.done
