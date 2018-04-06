@@ -4,9 +4,12 @@
 #    Based partly on instructions at https://github.com/google/aiyprojects-raspbian/blob/aiyprojects/HACKING.md
 #    Author: Vikas Munshi <vikas.munshi@gmail.com>
 #    Version 1.0: 2018.04.06
+#
 #    Source: https://github.com/vikasmunshi/python-scripts/blob/master/scripts/install_aiyprojects.sh
-#    s
-#    https://raw.githubusercontent.com/vikasmunshi/python-scripts/master/scripts/install_aiyprojects.sh
+#
+#    Example usage:
+#    bash <(curl -s https://raw.githubusercontent.com/vikasmunshi/python-scripts/master/scripts/install_aiyprojects.sh)
+#
 ########################################################################################################################
 #    MIT License
 #
@@ -41,10 +44,10 @@ update_stage() { stage=$((${stage}+1)); echo -n ${stage} >${flag} ;}
 
 # to maintain consistency in user interaction
 ask_user() {
-    echo -e "Hit [space] or [enter] to $1, press any other key to $2 or Ctrl+C to exit"
-    echo -n -e "... will wait 60 seconds before $3 ..."
+    echo -n -e "Waiting 60 seconds for you to:\n\t hit \e[1[space]\e[0m or \e[1[enter]\e[0m to \e[1$1\e[0m (default)"
+    echo -n -e "\t OR type any other key to $2 OR press Ctrl+C to exit"
     trap 'exit 129' SIGINT
-    read -t60 -n1 -rsp $'\n' key || true
+    read -t60 -n1 -rsp $'...\n' key || true
     trap - SIGINT
     [[ -z ${key} ]] && return 0 || return 1
 }
@@ -52,25 +55,26 @@ ask_user() {
 # update stage, inform the user allowing intervention and go for a reboot
 reboot_nicely() {
     update_stage
-    ask_user 'reboot now' 'skip rebooting' 'rebooting'
+    echo -e '\e[1m\e[5mTo complete setup, please rerun this script after reboot.\e[0m'
+    ask_user 'reboot now' 'skip rebooting'
     [[ $? -eq 0 ]] && sudo reboot || exit 0
 }
 
 # terminate script on error; switch to home dir, rest of the script uses relative paths
 set -e
 cd
+ask_user 'choice 1' 'choice 2'
+exit 0
 
 # use dot file in home dir as flag file to keep track of stages and read the last known stage
 [[ -f $0 ]] && flag=~/.$(basename $0).done || flag=~/.install_aiyprojects.sh.done
 stage=$(read_stage)
-echo ${flag}
-ask_user 'happy' 'sad' 'nothing'
-exit 0
+
 # Workaround for issue that sometimes crashes Raspbian Menu-bar on reboot
 # Fix is to delete the current user lxpanel config and reboot
 # Restarting the X session (rebooting) will create a new lxpanel config file and the menu bar should be visible again.
 [[ ${stage} -gt 0 && ${stage} -lt 3 ]] && {
-    ask_user 'continue' 'fix Raspbian Menu-bar not visible and reboot' 'continuing'
+    ask_user 'continue' 'fix Raspbian Menu-bar not visible and reboot'
     [[ $? -eq 0 ]] || { sudo rm -rf ~/.config/lxpanel; sudo reboot ;}
 }
 # TODO - remove above workaround when no longer needed
@@ -115,7 +119,7 @@ source env/bin/activate
 [[ ${stage} -lt 3 ]] && {
     # check audio
     python3 checkpoints/check_audio.py
-    ask_user 'confirm speaker and microphone work' 'indicate otherwise' 'assuming tests worked'
+    ask_user 'confirm speaker and microphone work' 'indicate otherwise'
     [[ $? -eq 0 ]] || exit 1
 
     # start demo
@@ -134,7 +138,7 @@ source env/bin/activate
 
 # make headless
 [[ ${stage} -lt 4 ]] && {
-    ask_user 'enable headless start' 'skip' 'enabling headless start'
+    ask_user 'enable headless start' 'skip'
     [[ $? -eq 0 ]] || exit 0
     [[ -f src/main.py ]] || cp src/examples/voice/assistant_library_with_button_demo.py src/main.py
     sudo bash -c """
