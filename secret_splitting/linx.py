@@ -147,9 +147,3 @@ class Secret(object):
     def __str__(self):
         return repr(self)
 
-
-if __name__ == '__main__':
-    s = Secret('gwbyrix fjhsauegf gfugr')
-
-    print(s.shares)
-    print(Secret(shares=tuple(s.shares)))
