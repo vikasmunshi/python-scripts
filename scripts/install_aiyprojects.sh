@@ -6,7 +6,7 @@
 #    https://speakerdeck.com/savelee/aiy-voicekit-workshop                                                             #
 #                                                                                                                      #
 #    Author: Vikas Munshi <vikas.munshi@gmail.com>                                                                     #
-#    Version 1.0: 2018.04.06                                                                                           #
+#    Version 1.0.1: 2018.04.11                                                                                           #
 #                                                                                                                      #
 #    Source: https://github.com/vikasmunshi/python-scripts/blob/master/scripts/install_aiyprojects.sh                  #
 #    Example usage:                                                                                                    #
@@ -36,10 +36,15 @@
 #    SOFTWARE.                                                                                                         #
 ########################################################################################################################
 
-# terminate script on error; switch to home dir, rest of the script uses relative paths
-set -e; cd
+# terminate script on error
+set -e
+# switch to home dir, rest of the script uses relative paths
+cd
 
 # involves reboot, so we keep track of progress in a flag file managed using: read_stage, update_stage, reboot_nicely
+# use dot file in home dir as flag file to keep track of stages; support execution from URL
+[[ -f $0 ]] && flag=~/.$(basename $0).done || flag=~/.install_aiyprojects.sh.done
+
 # read last known stage from flag file, default 0
 read_stage() { [[ -f ${flag} ]] && head -n 1 ${flag} | tr -d \n || echo -n 0 ;}
 
@@ -64,9 +69,12 @@ reboot_nicely() {
     [[ $? -eq 0 ]] && sudo reboot || exit 0
 }
 
-# use dot file in home dir as flag file to keep track of stages and read the last known stage
-[[ -f $0 ]] && flag=~/.$(basename $0).done || flag=~/.install_aiyprojects.sh.done
+# read the last known stage and check it is valid
 stage=$(read_stage)
+[[ ${stage} =~ '^[0-4]$' ]] || {
+    echo "Invalid stage! ${stage}"
+    exit 1
+}
 
 # Workaround for issue that sometimes crashes Raspbian Menu-bar on reboot
 # Fix is to delete the current user lxpanel config and reboot
@@ -80,24 +88,20 @@ stage=$(read_stage)
 # clone the repository
 [[ -d 'AIY-projects-python' ]] || git clone https://github.com/google/aiyprojects-raspbian.git AIY-projects-python
 
-# switch dir, rest of the script uses relative paths to AIY-projects-python
-cd AIY-projects-python/
-
 # setup python virtual env in AIY-projects-python
-[[ -d 'env' ]] || {
+[[ -d 'AIY-projects-python/env' ]] || {
     sudo bash -c """
     yes | apt-get update
     yes | apt-get upgrade
     yes | apt-get install python-virtualenv
     """
+    cd AIY-projects-python/
     virtualenv -p python3 env
 }
 
-# activate virtual env, rest of the script uses python virtualenv
-source env/bin/activate
-
 # install dependencies
-[[ ${stage} -lt 1 ]] && {
+[[ ${stage} -eq 0 ]] && {
+    cd AIY-projects-python/; ource env/bin/activate
     scripts/install-deps.sh
     sudo scripts/install-services.sh
     pip install -e src/
@@ -107,14 +111,17 @@ source env/bin/activate
 }
 
 # configure driver
-[[ ${stage} -lt 2 ]] && {
+[[ ${stage} -eq 1 ]] && {
+    cd AIY-projects-python/; source env/bin/activate
     python3 checkpoints/check_wifi.py
     sudo scripts/configure-driver.sh
     reboot_nicely
 }
 
 # check audio and start demo
-[[ ${stage} -lt 3 ]] && {
+[[ ${stage} -eq 2 ]] && {
+    cd AIY-projects-python/; source env/bin/activate
+
     # check audio
     python3 checkpoints/check_audio.py
     ask_user 'confirm speaker and microphone work' 'indicate otherwise'
@@ -135,14 +142,19 @@ source env/bin/activate
 }
 
 # make headless
-[[ ${stage} -lt 4 ]] && {
+[[ ${stage} -eq 3 ]] && {
     ask_user 'enable headless start' 'skip'
     [[ $? -eq 0 ]] || exit 0
-    [[ -f src/main.py ]] || cp src/examples/voice/assistant_library_with_button_demo.py src/main.py
+    [[ -f AIY-projects-python/src/main.py ]] || {
+        cp AIY-projects-python/src/examples/voice/assistant_library_with_button_demo.py AIY-projects-python/src/main.py
+        echo -n 'copied AIY-projects-python/src/examples/voice/assistant_library_with_button_demo.py '
+        echo 'to AIY-projects-python/src/main.py'
+    }
     sudo bash -c """
     systemctl enable voice-recognizer
     systemctl start voice-recognizer
     systemctl status voice-recognizer
     """
+    echo 'voice-recognizer service will start at boot, using AIY-projects-python/src/main.py'
     update_stage
 }
