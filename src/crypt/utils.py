@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-#   crypt/__init__.py
+#   crypt/utils.py
 #
 ########################################################################################################################
 #    Author: Vikas Munshi <vikas.munshi@gmail.com>
@@ -9,6 +9,7 @@
 #
 #    source: https://github.com/vikasmunshi/python-scripts/tree/master/src/
 #    set-up: bash <(curl -s https://github.com/vikasmunshi/python-scripts/tree/master/src/setup.sh)
+#    usage: utils.py uuid filename(s)
 #
 ########################################################################################################################
 #    MIT License
@@ -34,7 +35,42 @@
 #    SOFTWARE.
 ########################################################################################################################
 
-from .primitives import decrypt, decrypt_and_encrypt, encrypt, merge, split
+from re import compile
+from uuid import uuid4
 
-__package__ = 'crypt'
-__version__ = '0.0.1'
+re_match_uuid = compile(u'UUID|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+
+
+def replace_uuids(string: str) -> (str, list):
+    result = re_match_uuid.sub(repl=lambda _: str(uuid4()), string=string)
+    return result, re_match_uuid.findall(result)
+
+
+def change_uuids(*args) -> None:
+    for filename in args:
+        try:
+            with open(filename, 'r') as infile:
+                data, new_uuids = replace_uuids(infile.read())
+            with open(filename, 'w') as outfile:
+                outfile.write(data)
+        except Exception as e:
+            print(e)
+            print('error processing file ' + filename)
+        else:
+            print('uuids updated in file ' + filename)
+            print('\n'.join(new_uuids))
+
+
+def usage() -> None:
+    print('Usage:\n\t' + argv[0] + ' uuid filename(s)')
+
+
+if __name__ == '__main__':
+    from sys import argv
+
+    if len(argv) == 1:
+        usage()
+    elif argv[1] == 'uuid':
+        change_uuids(*argv[2:])
+    else:
+        usage()

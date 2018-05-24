@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-#
-#   crypt/__init__.py
-#
+#!/usr/bin/env bash
+#  setup.sh
+
 ########################################################################################################################
 #    Author: Vikas Munshi <vikas.munshi@gmail.com>
 #    Version 0.0.1: 2018.05.24
@@ -34,7 +32,3 @@
 #    SOFTWARE.
 ########################################################################################################################
 
-from .primitives import decrypt, decrypt_and_encrypt, encrypt, merge, split
-
-__package__ = 'crypt'
-__version__ = '0.0.1'
