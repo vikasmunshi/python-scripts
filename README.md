@@ -1,14 +1,13 @@
 # python-scripts
 
-## crypt
+## Install:
 
+    pip3 install -e git+https://github.com/vikasmunshi/python-scripts.git#egg=akira
 
 
 ## tic_tac_toe
 
-### Install:
 
-    pip3 install -e tic_tac_toe
 
 ### Usage:
 
