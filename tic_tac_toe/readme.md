@@ -1,7 +1,6 @@
-Tic Tac Toe Tournament
-======================
+# Tic Tac Toe Tournament
 
-Install:
+## Install:
 
     pip3 install -e git+https://github.com/vikasmunshi/python-scripts.git#egg=akira
     or
@@ -9,7 +8,7 @@ Install:
     cd python-scripts
     pip3 install -e tic_tac_toe
 
-Usage:
+## Usage:
 
     python3 -m tic_tac_toe [-h] [-d STRATEGIES_FOLDER] [-g GAMES] [--include_bad]
 
@@ -19,9 +18,14 @@ Usage:
       -g GAMES              number of games per match, default 1000
       --include_bad         include bad* files, ignored by default
   
-Template for strategy
+## Template for player strategy file:
 
+    #!/usr/bin/env python3
+    # -*- coding: utf-8 -*-
     from tic_tac_toe import *
+
+    __author__ = 'Your Name'
+    
     def strategy(board: Board) -> Cell:
         row_id, col_id = 0, 0
         # your code here
