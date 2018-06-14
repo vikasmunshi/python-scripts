@@ -14,9 +14,9 @@
 
     optional arguments:
       -h, --help            show this help message and exit
-      -d STRATEGIES_FOLDER  location of player strategy files
-      -g GAMES              number of games per match, default 1000
-      --include_bad         include bad* files, ignored by default
+      -d STRATEGIES_FOLDER  location of player strategy files, default is TIC_TAC_TOE_DIR/strategies
+      -g GAMES              number of games per match, default is 1000
+      --include_bad         include files matching bad*.py in strategies folder, ignored by default
   
 ## Template for player strategy file:
 
