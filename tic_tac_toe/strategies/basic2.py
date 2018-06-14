@@ -46,12 +46,12 @@ def is_center_cell(cell, board_size):
 
 
 @memoize
-def is_corner_cell(cell, board_size) -> bool:
+def is_corner_cell(cell, board_size):
     return cell.row_id in (0, board_size - 1) and cell.col_id in (0, board_size - 1)
 
 
 @memoize
-def is_first_move(board) -> bool:
+def is_first_move(board):
     return not board.moves
 
 
