@@ -3,23 +3,25 @@
 #   tic_tac_toe/__main__.py
 
 from argparse import ArgumentParser
+from glob import iglob
 from importlib.util import module_from_spec, spec_from_file_location
 from inspect import isfunction, signature
-from os import listdir
-from os.path import dirname, join, splitext
+from os import environ
+from os.path import basename, dirname, join, splitext
 from time import time
 
 from . import Player, Players, Scores, play_tournament, print_to_std_err, strategy
 
+environ['COLUMNS'] = '120'
+
 
 def load_players(players_folder: str, include_bad: bool = False) -> Players:
     expected_signature = signature(strategy)
-    for player_file in (file_name for file_name in listdir(players_folder) if file_name.endswith('.py') \
-            and not file_name.startswith('_') \
-            and (include_bad or not file_name.startswith('bad'))):
+    for player_file in iglob(join(players_folder, '[!_]*.py')):
+        player_name = splitext(basename(player_file))[0]
         try:
-            player_name = splitext(player_file)[0]
-            player_strategy_spec = spec_from_file_location(player_name, join(players_folder, player_file))
+            if not include_bad and player_name.startswith('bad'): continue
+            player_strategy_spec = spec_from_file_location(player_name, player_file)
             player_strategy_module = module_from_spec(player_strategy_spec)
             player_strategy_spec.loader.exec_module(player_strategy_module)
             player_strategy = getattr(player_strategy_module, 'strategy')
@@ -30,7 +32,7 @@ def load_players(players_folder: str, include_bad: bool = False) -> Players:
             player_author = str(getattr(player_strategy_module, '__author__', 'Anon')).replace(' ', '_')
             yield Player('{}_{}'.format(player_name, player_author), player_strategy)
         except (AssertionError, AttributeError, ImportError, TypeError) as e:
-            print_to_std_err('file {} ignored because {}'.format(player_file, str(e)))
+            print_to_std_err('{} ignored because {}'.format(player_name, str(e)))
 
 
 def main() -> Scores:
@@ -45,11 +47,12 @@ def main() -> Scores:
     strategies_folder = args.strategies_folder or join(dirname(__file__), 'strategies')
     return play_tournament(3, args.games, players=tuple(load_players(strategies_folder, args.include_bad)))
 
+
 if __name__ == '__main__':
     st = time()
     result = main()
     et = time()
-    print_to_std_err('Tournament executed in {0:0.4f} seconds\n'.format(et - st))
+    print_to_std_err('\nTournament executed in {0:0.4f} seconds\n'.format(et - st))
     longest_name_length = max([len(score.player) for score in result])
     print_str = '{:' + str(longest_name_length + 2) + 's}->{:7d}/{}'
     header_str = '{:' + str(longest_name_length + 2) + 's}-> {}'
