@@ -3,6 +3,10 @@ Tic Tac Toe Tournament
 
 Install:
 
+    pip3 install -e git+https://github.com/vikasmunshi/python-scripts.git#egg=akira
+    or
+    git clone https://github.com/vikasmunshi/python-scripts.git
+    cd python-scripts
     pip3 install -e tic_tac_toe
 
 Usage:
@@ -19,5 +23,6 @@ Template for strategy
 
     from tic_tac_toe import *
     def strategy(board: Board) -> Cell:
+        row_id, col_id = 0, 0
         # your code here
-        return Cell(0,0)
+        return Cell(row_id,col_id)
