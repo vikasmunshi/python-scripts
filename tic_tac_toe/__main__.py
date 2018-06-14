@@ -58,4 +58,4 @@ if __name__ == '__main__':
     header_msg = '{:' + str(longest_name_length + 2) + 's}{}'
     print(header_msg.format('Player', '   Points   Wins(%)    Losses     Draws     Games Penalties'))
     for s in result:
-        print(msg.format(s.player, s.points, s.wins / s.games, s.losses, s.draws, s.games, s.penalties))
+        print(msg.format(s.player, s.points, 0 if not s.games else s.wins / s.games, s.losses, s.draws, s.games, s.penalties))

@@ -71,7 +71,7 @@ def last_move_has_won(board: Board) -> bool:
 
 def play(board: Board, one: Player, two: Player) -> str:
     move = one.strategy(board)
-    if move not in get_possible_moves(board): return report_player_made_an_invalid_move(one)
+    if move not in get_possible_moves(board): return report_player_made_an_invalid_move(one.name)
     return check_winner(add_move_to_board(board, move), one.name) or play(add_move_to_board(board, move), two, one)
 
 
@@ -104,9 +104,9 @@ def play_tournament(size: int, num_games: int, players: Players) -> Scores:
 
 
 @mem_cached
-def report_player_made_an_invalid_move(player: Player) -> str:
-    print_to_std_err('Player {} made an invalid move!!!'.format(player.name))
-    return 'INVALID{}'.format(player.name)
+def report_player_made_an_invalid_move(name: str) -> str:
+    print_to_std_err('Player {} made an invalid move!!!'.format(name))
+    return 'INVALID{}'.format(name)
 
 
 def strategy(board: Board) -> Cell:
