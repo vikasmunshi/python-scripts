@@ -54,8 +54,8 @@ if __name__ == '__main__':
     et = time()
     print_to_std_err('\nTournament executed in {0:0.4f} seconds\n'.format(et - st))
     longest_name_length = max([len(score.player) for score in result])
-    print_str = '{:' + str(longest_name_length + 2) + 's}->{:7d}/{}'
-    header_str = '{:' + str(longest_name_length + 2) + 's}-> {}'
-    print(header_str.format('Player', 'Points/Matches'))
+    print_str = '{:' + str(longest_name_length + 2) + 's}{:7d} {:7d} {:7d} {:7d}'
+    header_str = '{:' + str(longest_name_length + 2) + 's}{}'
+    print(header_str.format('Player', ' Points    Wins   Draws Matches'))
     for score in result:
-        print(print_str.format(score.player, score.points, score.games))
+        print(print_str.format(score.player, score.points, score.wins, score.draws, score.games))

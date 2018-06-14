@@ -70,8 +70,7 @@ def last_move_has_won(board: Board) -> bool:
 def play(board: Board, one: Player, two: Player) -> str:
     move = one.strategy(board)
     if move not in get_possible_moves(board): return report_player_made_an_invalid_move(one)
-    b = add_move_to_board(board, move)
-    return check_winner(b, one.name) or play(b, two, one)
+    return check_winner(add_move_to_board(board, move), one.name) or play(add_move_to_board(board, move), two, one)
 
 
 def play_game(size: int, one: Player, two: Player) -> str:
@@ -84,19 +83,22 @@ def play_game_set(size: int, one: Player, two: Player) -> (str, str):
 
 def play_match(size: int, num_double_games: int, one: Player, two: Player) -> Scores:
     winners = [i for s in (play_game_set(size, one, two) for _ in range(num_double_games)) for i in s]
-    points = winners.count(one.name) - winners.count(two.name)
+    wins = winners.count(one.name), winners.count(two.name), winners.count('DRAW')
     penalties = winners.count('INVALID MOVE {}'.format(one.name)), winners.count('INVALID MOVE {}'.format(two.name))
     valid_games = len(winners) - penalties[0] - penalties[1]
-    return Score(one.name, points - penalties[0], valid_games), Score(two.name, - points - penalties[1], valid_games)
+    return Score(one.name, wins[0] - wins[1] - penalties[0], wins[0], wins[2], valid_games), \
+           Score(two.name, wins[1] - wins[0] - penalties[1], wins[1], wins[2], valid_games)
 
 
 def play_tournament(size: int, num_games: int, players: Players) -> Scores:
     opponents = [(one, two) for one in players for two in players if one is not two]
     matches = [i for s in (play_match(size, num_games // 4, one, two) for one, two in opponents) for i in s]
-    results = {score.player: [0, 0] for score in matches}
+    results = {score.player: [0, 0, 0, 0] for score in matches}
     for score in matches:
         results[score.player][0] += score.points
-        results[score.player][1] += score.games
+        results[score.player][1] += score.wins
+        results[score.player][2] += score.draws
+        results[score.player][3] += score.games
     scores = [Score(player, *result) for player, result in results.items()]
     return tuple(sorted(scores, key=lambda s: s.points, reverse=True))
 
