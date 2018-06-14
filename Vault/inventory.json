@@ -1,0 +1,42 @@
+{
+  "vault_id": "vault:0a1b3cd7-c840-40a7-8258-e71dfa3ba40f",
+  "vault_key": "/usr/local/bin/Vault/vault.key",
+  "custodians": {
+    "custodian01": {
+      "address": "custodian01@test.local",
+      "rsa_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpOqTw6HY+rDJcZ2yF4ccdhLaQi9Tsbqh5p358+t6n1fdSrnc3R6dfDpKQwDsT0CLKSsgmzXFeYeuLz6vle9RHW9Xqb2caCBhEQ09KRvbZzLTOjEmJDc0x8voubeg8xQbajaztjwy/EEUoS+yiJP0122wIRgqgwnUav/8Tzzl50J/Ij+hJAsDV6Cp6S0ro3hxWScQ0hIOE83CvWLDBsHqtal1VJL2FKmFoSUcsxFWtd/ZJtPaEvdmeWWPr1dB0zJ+e0LSojodA9RtitnWgCaV463r+raVd1+22tnrWegBx9XYUE4bM9CXlzYxMBNjYGhldsH/qQ0C+trM7PF/vrzIN custodian01@test.local"
+    },
+    "custodian02": {
+      "address": "custodian02@test.local",
+      "rsa_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDH/EBQKdD/C8OzX6F7p3/2N8ArYMYfqClEt6ZKAXqpZJG0EJJznCWTgueH8RYbMIXSVWuUweQxbPc1qQZOMBdogXTeFKj2e10G26zxH6/Z5gNgk+Hv6LM/3mWO1GAOwAjpe9wZegz+vLar6iTmWREksVnnCYh/mnfyPO76yTB+ipSl2qGeB6uHjha2VVXfSZOsx+mMt4sDDkfN/5I/Z77Dil1W/t8OwlwefTiuUVTbYsdW3qYIX9mkl09y0Ve+ubGVDW9kAJfr1Bbd/sdrQqk3IrrblU/+H4uQFLmsW1UdXkHzxCopkM1EeSG+0CZ9mBEoFCnr2jUqRvJMp4YUpjE9 custodian02@test.local"
+    },
+    "custodian03": {
+      "address": "custodian03@test.local",
+      "rsa_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCrAO05atKqoP6alCwPTDQ9BhK1nfprXHTG6LcBiteBTp+b3j77ju32RGEwkkEjdJvBtgTokPfDqboEKCcy7+84CBvx1heUTiVjpd3tFcFRcjFvx7IlRsiadkK+Fi+VUBRpyFkOqfUvcHC+TYQpuX5yDgcGUR7DVLpJS+SypdxqwiVIy/SAF27WZbZkYoTXqMmXCf9o7+d+mKaQ1m3vCAhYQu4iejxmF8HcdNkhPeaJLlVwhrLhzBmxId0TkOLmFNBtftAh90Zvx//Sf0KzVsWRnuT6p5LGYvt3ZRTsdI9lusXljVuldiEDdUEag1FNpBBh9xl58SqlX7Ofv1jrikVn custodian03@test.local"
+    },
+    "custodian04": {
+      "address": "custodian04@test.local",
+      "rsa_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDKuSn2N3Oul2Iqe0Wrsu50nVW4n4BRlX3btgTDfdA3Gyyw3HWmezaS+m+W5THPFRAf1Z6cJwsaqCeJCBtHTL49SU2GZ+X7Apdnv9mE2AGQBlXdVrtp6zVdB2L4WBOZGt6PlX/2hK+G9T8rjiwiFrz/br4O3b/RVbnn6JpPCVzZhmjUysFvYCOAzaoanpf10n8nlxRKOeBs7qWOjGOzOwCU7D3UMqso9sJpAI8Bkd7Mgz9SFyVEovfQko7FkhageHlmNrkyAiJssxzazLA7PsinwTzGwcZkGs2mLROumz7n0b1Out2/+ACxd0cxW384cSySAeJEb6lOVbzyT8MTKgkN custodian04@test.local"
+    },
+    "custodian05": {
+      "address": "custodian05@test.local",
+      "rsa_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFPR50t6EPhLNsXHfDuQ/5pQOYkhlv4U2wOfhfCfC46zM9DSNZqijPzLBjUR3TRRKOX1DYMhbSJZlwCVZLLMT4ydruCIo64WzaG6e5iKIu2XVJOT4FIRyMb+0QIzzRoOLN9fpHLDEESEl2gEGfRHtBCoqLff2y7pG77iWsOdXwOrrMIfeK3SGXJMW9dNM4UT7xyDscLyxSZcXQ3cDvKkIB04bjmkUAWs+o6cZLzqQRewmuklKFNUdmBKTNCQg9k53FqKZfhxdbgZT009HfJOXbzl+XMo0rYEZRo9CpYnfD5e7q6nj7RsIauzjQMRhf0/a7OIrPW7MUdZvzNMcM22qv custodian05@test.local"
+    }
+  },
+  "secrets": {
+    "secret:60e1c736-0d48-494b-8c0d-a38f745c6cb8": {
+      "threshold_shares": 3,
+      "length": 32
+    },
+    "secret:2ac01012-b4e2-4d93-a8b4-e3f9e587ba99": {
+      "threshold_shares": 3
+    },
+    "secret:0b26b63a-9741-4679-b9a6-ec0b3f58bcd7": {},
+    "secret:73fc936e-b90c-41f6-b418-5fea0dfde886": {},
+    "secret:88271bf2-433d-4d57-b2da-01fccceda9ba": {}
+  },
+  "disks": {
+    "/dev/data/t-friam": "secret:73fc936e-b90c-41f6-b418-5fea0dfde886",
+    "/dev/data/t-cdaas": "secret:88271bf2-433d-4d57-b2da-01fccceda9ba"
+  }
+}
