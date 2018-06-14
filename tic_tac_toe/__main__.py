@@ -35,13 +35,15 @@ def load_players(players_folder: str, include_bad: bool = False) -> Players:
 
 def main() -> Scores:
     parser = ArgumentParser(description='Play Tic Tac Toe Tournament')
-    parser.add_argument('-d', dest='strategies_folder', type=str, help='location of player strategy files')
-    parser.add_argument('-g', dest='games', default=1000, type=int, help='number of games per match, default 1000')
-    parser.add_argument('--include_bad', action='store_true', help='include bad* files, ignored by default')
+    parser.add_argument('-d', dest='strategies_folder', type=str,
+                        help='location of player strategy files, default is TIC_TAC_TOE_DIR/strategies')
+    parser.add_argument('-g', dest='games', default=1000, type=int,
+                        help='number of games per match, default is 1000')
+    parser.add_argument('--include_bad', action='store_true',
+                        help='include files matching bad*.py in strategies folder, ignored by default')
     args = parser.parse_args()
     strategies_folder = args.strategies_folder or join(dirname(__file__), 'strategies')
     return play_tournament(3, args.games, players=tuple(load_players(strategies_folder, args.include_bad)))
-
 
 if __name__ == '__main__':
     st = time()
