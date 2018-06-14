@@ -11,5 +11,5 @@ Cells = Tuple[Cell, ...]
 Lines = Tuple[Cells, ...]
 Player = namedtuple('Player', ['name', 'strategy'])
 Players = Tuple[Player, ...]
-Score = namedtuple('Score', ['player', 'points', 'wins', 'draws', 'games'])
+Score = namedtuple('Score', ['player', 'points', 'wins', 'draws', 'losses', 'games', 'penalties'])
 Scores = Tuple[Score, ...]

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 #   tic_tac_toe/core.py
 
+from collections import Counter
+
 from .types import Board, Cell, Cells, Lines, Player, Players, Score, Scores
 from .util import mem_cached, print_to_std_err, select_random_cell
 
@@ -82,31 +84,29 @@ def play_game_set(size: int, one: Player, two: Player) -> (str, str):
 
 
 def play_match(size: int, num_double_games: int, one: Player, two: Player) -> Scores:
-    winners = [i for s in (play_game_set(size, one, two) for _ in range(num_double_games)) for i in s]
-    wins = winners.count(one.name), winners.count(two.name), winners.count('DRAW')
-    penalties = winners.count('INVALID MOVE {}'.format(one.name)), winners.count('INVALID MOVE {}'.format(two.name))
-    valid_games = len(winners) - penalties[0] - penalties[1]
-    return Score(one.name, wins[0] - wins[1] - penalties[0], wins[0], wins[2], valid_games), \
-           Score(two.name, wins[1] - wins[0] - penalties[1], wins[1], wins[2], valid_games)
+    results = Counter([i for s in (play_game_set(size, one, two) for _ in range(num_double_games)) for i in s])
+    wins_one, wins_two, draws = results.get(one.name, 0), results.get(two.name, 0), results.get('DRAW', 0)
+    invalid_one = results.get('INVALID{}'.format(one.name), 0)
+    invalid_two = results.get('INVALID{}'.format(two.name), 0)
+    valid_games = wins_one + wins_two + draws
+    return (Score(one.name, wins_one - wins_two - invalid_one, wins_one, wins_two, draws, valid_games, invalid_one),
+            Score(two.name, wins_two - wins_one - invalid_two, wins_two, wins_one, draws, valid_games, invalid_two))
 
 
 def play_tournament(size: int, num_games: int, players: Players) -> Scores:
-    opponents = [(one, two) for one in players for two in players if one is not two]
-    matches = [i for s in (play_match(size, num_games // 4, one, two) for one, two in opponents) for i in s]
-    results = {score.player: [0, 0, 0, 0] for score in matches}
-    for score in matches:
-        results[score.player][0] += score.points
-        results[score.player][1] += score.wins
-        results[score.player][2] += score.draws
-        results[score.player][3] += score.games
-    scores = [Score(player, *result) for player, result in results.items()]
+    opponents = ((one, two) for one in players for two in players if one is not two)
+    match_results = [i for s in (play_match(size, num_games // 4, one, two) for one, two in opponents) for i in s]
+    r = {score.player: (0,) * 6 for score in match_results}
+    for s in match_results:
+        r[s.player] = [x + y for x, y in zip(r[s.player], (s.points, s.wins, s.losses, s.draws, s.games, s.penalties))]
+    scores = [Score(player, *result) for player, result in r.items()]
     return tuple(sorted(scores, key=lambda s: s.points, reverse=True))
 
 
 @mem_cached
 def report_player_made_an_invalid_move(player: Player) -> str:
     print_to_std_err('Player {} made an invalid move!!!'.format(player.name))
-    return 'INVALID MOVE {}'.format(player.name)
+    return 'INVALID{}'.format(player.name)
 
 
 def strategy(board: Board) -> Cell:

@@ -31,7 +31,7 @@ def load_players(players_folder: str, include_bad: bool = False) -> Players:
                 'signature is not strategy{}'.format(expected_signature)
             player_author = str(getattr(player_strategy_module, '__author__', 'Anon')).replace(' ', '_')
             yield Player('{}_{}'.format(player_name, player_author), player_strategy)
-        except (AssertionError, AttributeError, ImportError, TypeError) as e:
+        except (AssertionError, AttributeError, ImportError, SyntaxError, TypeError) as e:
             print_to_std_err('{} ignored because {}'.format(player_name, str(e)))
 
 
@@ -54,8 +54,8 @@ if __name__ == '__main__':
     et = time()
     print_to_std_err('\nTournament executed in {0:0.4f} seconds\n'.format(et - st))
     longest_name_length = max([len(score.player) for score in result])
-    print_str = '{:' + str(longest_name_length + 2) + 's}{:7d} {:7d} {:7d} {:7d}'
-    header_str = '{:' + str(longest_name_length + 2) + 's}{}'
-    print(header_str.format('Player', ' Points    Wins   Draws Matches'))
-    for score in result:
-        print(print_str.format(score.player, score.points, score.wins, score.draws, score.games))
+    msg = '{:' + str(longest_name_length + 2) + 's}{:9d} {:9.2%} {:9d} {:9d} {:9d} {:9d}'
+    header_msg = '{:' + str(longest_name_length + 2) + 's}{}'
+    print(header_msg.format('Player', '   Points   Wins(%)    Losses     Draws     Games Penalties'))
+    for s in result:
+        print(msg.format(s.player, s.points, s.wins / s.games, s.losses, s.draws, s.games, s.penalties))

@@ -27,13 +27,12 @@ def find_winning_moves(board: Board) -> Cells:
 
 @mem_cached
 def get_first_move(board: Board) -> Cells:
-    return () if board.moves else (Cell(1, 1),)
+    return () if board.moves else find_center_cell_moves(board)
 
 
 @mem_cached
 def get_moves(board: Board) -> Cells:
-    return get_first_move(board) or \
-           find_winning_moves(board) or \
+    return find_winning_moves(board) or \
            find_defensive_moves(board) or \
            find_center_cell_moves(board) or \
            find_corner_cell_moves(board) or \
