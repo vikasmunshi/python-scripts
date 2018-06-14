@@ -5,4 +5,4 @@ from tic_tac_toe import *
 
 
 def strategy(board: Board) -> Cell:
-    return select_random_cell(get_free_cells(board))
+    return select_random_cell(get_possible_moves(board))

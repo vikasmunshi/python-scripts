@@ -4,6 +4,4 @@ from tic_tac_toe import *
 
 __author__ = 'vm'
 
-
-def strategy(board: Board) -> Cells:
-    return board.moves
+strategy = Cell(1, 1)

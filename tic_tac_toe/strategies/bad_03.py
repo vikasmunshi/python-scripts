@@ -6,4 +6,4 @@ __author__ = 'vm'
 
 
 def strategy(board: Board) -> Cell:
-    return get_free_cells(board)
+    return get_possible_moves(board)

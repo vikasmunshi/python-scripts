@@ -5,7 +5,7 @@ from tic_tac_toe import *
 
 @mem_cached
 def get_move(board: Board) -> Cell:
-    return get_free_cells(board)[0]
+    return get_possible_moves(board)[0]
 
 
 def strategy(board: Board) -> Cell:

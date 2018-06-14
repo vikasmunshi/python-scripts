@@ -6,4 +6,4 @@ __author__ = 'vm'
 
 
 def strategy(board: Board) -> Cell:
-    return select_random_cell(get_free_cells(board) + (Cell(3, 3),))
+    return select_random_cell(get_possible_moves(board) + (Cell(3, 3),))

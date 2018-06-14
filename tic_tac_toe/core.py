@@ -3,7 +3,7 @@
 #   tic_tac_toe/core.py
 
 from .types import Board, Cell, Cells, Lines, Player, Players, Score, Scores
-from .util import mem_cached, select_random_cell
+from .util import mem_cached, print_to_std_err, select_random_cell
 
 
 @mem_cached
@@ -13,17 +13,17 @@ def add_move_to_board(board: Board, move: Cell) -> Board:
 
 @mem_cached
 def board_is_full(board: Board) -> bool:
-    return not get_free_cells(board)
-
-
-@mem_cached
-def check_winner(board: Board, name: str) -> str:
-    return name if last_player_has_won(board) else 'DRAW' if board_is_full(board) else ''
+    return not get_possible_moves(board)
 
 
 @mem_cached
 def create_empty_board(size: int) -> Board:
     return Board(size, ())
+
+
+@mem_cached
+def check_winner(board: Board, name: str) -> str:
+    return name if last_move_has_won(board) else 'DRAW' if board_is_full(board) else ''
 
 
 @mem_cached
@@ -43,11 +43,6 @@ def get_diagonals(board: Board) -> Lines:
 
 
 @mem_cached
-def get_free_cells(board: Board) -> Cells:
-    return tuple([cell for cell in get_cells(board) if cell not in board.moves])
-
-
-@mem_cached
 def get_lines(board: Board) -> Lines:
     return get_rows(board) + get_columns(board) + get_diagonals(board)
 
@@ -58,32 +53,37 @@ def get_moves_of_last_player(board: Board) -> Cells:
 
 
 @mem_cached
+def get_possible_moves(board: Board) -> Cells:
+    return tuple([cell for cell in get_cells(board) if cell not in board.moves])
+
+
+@mem_cached
 def get_rows(board: Board) -> Lines:
     return tuple([tuple([Cell(row_id, col_id) for col_id in range(board.size)]) for row_id in range(board.size)])
 
 
 @mem_cached
-def last_player_has_won(board: Board) -> bool:
+def last_move_has_won(board: Board) -> bool:
     return any([all([cell in get_moves_of_last_player(board) for cell in line]) for line in get_lines(board)])
 
 
 def play(board: Board, one: Player, two: Player) -> str:
     move = one.strategy(board)
-    if move not in get_free_cells(board): return 'INVALID MOVE {}'.format(one.name)
+    if move not in get_possible_moves(board): return report_player_made_an_invalid_move(one)
     b = add_move_to_board(board, move)
     return check_winner(b, one.name) or play(b, two, one)
 
 
-def play_1_game(size: int, one: Player, two: Player) -> str:
+def play_game(size: int, one: Player, two: Player) -> str:
     return play(create_empty_board(size), one, two)
 
 
-def play_2_games(size: int, one: Player, two: Player) -> (str, str):
-    return play_1_game(size, one, two), play_1_game(size, two, one)
+def play_game_set(size: int, one: Player, two: Player) -> (str, str):
+    return play_game(size, one, two), play_game(size, two, one)
 
 
 def play_match(size: int, num_double_games: int, one: Player, two: Player) -> Scores:
-    winners = [i for s in (play_2_games(size, one, two) for _ in range(num_double_games)) for i in s]
+    winners = [i for s in (play_game_set(size, one, two) for _ in range(num_double_games)) for i in s]
     points = winners.count(one.name) - winners.count(two.name)
     penalties = winners.count('INVALID MOVE {}'.format(one.name)), winners.count('INVALID MOVE {}'.format(two.name))
     valid_games = len(winners) - penalties[0] - penalties[1]
@@ -101,5 +101,11 @@ def play_tournament(size: int, num_games: int, players: Players) -> Scores:
     return tuple(sorted(scores, key=lambda s: s.points, reverse=True))
 
 
+@mem_cached
+def report_player_made_an_invalid_move(player: Player) -> str:
+    print_to_std_err('Player {} made an invalid move!!!'.format(player.name))
+    return 'INVALID MOVE {}'.format(player.name)
+
+
 def strategy(board: Board) -> Cell:
-    return select_random_cell(get_free_cells(board))
+    return select_random_cell(get_possible_moves(board))
