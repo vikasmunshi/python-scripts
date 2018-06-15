@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='akira',
-    version='1.0.0',
+    version='1.0.1',
     author='Vikas Munshi',
     author_email='vikas.munshi@gmail.com',
     url='https://github.com/vikasmunshi/python-scripts.git',

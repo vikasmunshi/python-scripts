@@ -8,15 +8,14 @@ from typing import Callable
 
 from .types import Board, Cell, Cells
 
+cached = lru_cache(maxsize=None, typed=False)
+
 
 def log_msg(*args, **kwargs) -> None:
     print(*args, file=stderr, **kwargs)
 
 
-mem_cached = lru_cache(maxsize=None, typed=False)
-
-
-def record_final(func: Callable[[Board], str]) -> Callable[[Board], str]:
+def recorded(func: Callable[[Board], str]) -> Callable[[Board], str]:
     def f(board: Board, name: str) -> str:
         r = func(board, name)
         if r:

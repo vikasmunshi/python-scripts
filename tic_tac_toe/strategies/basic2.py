@@ -9,30 +9,30 @@ __author__ = 'Vikas Munshi'
 
 @memoize
 def find_center_cell_moves(board):
-    return tuple([c for c in get_possible_moves(board) if is_center_cell(c, board.size)])
+    return tuple(c for c in get_possible_moves(board) if is_center_cell(c, board.size))
 
 
 @memoize
 def find_corner_cell_moves(board):
-    return tuple([c for c in get_possible_moves(board) if is_corner_cell(c, board.size)])
+    return tuple(c for c in get_possible_moves(board) if is_corner_cell(c, board.size))
 
 
 @memoize
 def find_defensive_moves(board):
-    return tuple([c for c in get_possible_moves(board) if last_move_has_won(Board(board.size, board.moves + ((), c)))])
+    return tuple(c for c in get_possible_moves(board) if last_move_has_won(Board(board.size, board.moves + ((), c))))
 
 
 @memoize
 def find_winning_in_two_moves(board):
-    return tuple([i for s in
-                  [(m1, m2) for m1, m2 in combinations(get_possible_moves(board), 2)
+    return tuple(i for s in
+                 [(m1, m2) for m1, m2 in combinations(get_possible_moves(board), 2)
                    if last_move_has_won(Board(board.size, board.moves + (m1, (), m2)))]
-                  for i in s])
+                 for i in s)
 
 
 @memoize
 def find_winning_moves(board):
-    return tuple([c for c in get_possible_moves(board) if last_move_has_won(Board(board.size, board.moves + (c,)))])
+    return tuple(c for c in get_possible_moves(board) if last_move_has_won(Board(board.size, board.moves + (c,))))
 
 
 @memoize

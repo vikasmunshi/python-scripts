@@ -3,7 +3,7 @@
 from tic_tac_toe import *
 
 
-@mem_cached
+@cached
 def get_move(board: Board) -> Cell:
     return get_possible_moves(board)[0]
 

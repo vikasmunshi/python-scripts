@@ -7,40 +7,40 @@ from tic_tac_toe import *
 __author__ = 'Vikas Munshi'
 
 
-@mem_cached
+@cached
 def find_center_cell_moves(board: Board) -> Cells:
-    return tuple([c for c in get_possible_moves(board) if is_center_cell(c, board.size)])
+    return tuple(c for c in get_possible_moves(board) if is_center_cell(c, board.size))
 
 
-@mem_cached
+@cached
 def find_corner_cell_moves(board: Board) -> Cells:
-    return tuple([c for c in get_possible_moves(board) if is_corner_cell(c, board.size)])
+    return tuple(c for c in get_possible_moves(board) if is_corner_cell(c, board.size))
 
 
-@mem_cached
+@cached
 def find_defensive_moves(board: Board) -> Cells:
-    return tuple([c for c in get_possible_moves(board) if last_move_has_won(Board(board.size, board.moves + ((), c)))])
+    return tuple(c for c in get_possible_moves(board) if last_move_has_won(Board(board.size, board.moves + ((), c))))
 
 
-@mem_cached
+@cached
 def find_winning_in_two_moves(board: Board) -> Cells:
-    return tuple([i for s in
-                  [(m1, m2) for m1, m2 in combinations(get_possible_moves(board), 2)
+    return tuple(i for s in
+                 [(m1, m2) for m1, m2 in combinations(get_possible_moves(board), 2)
                    if last_move_has_won(Board(board.size, board.moves + (m1, (), m2)))]
-                  for i in s])
+                 for i in s)
 
 
-@mem_cached
+@cached
 def find_winning_moves(board: Board) -> Cells:
-    return tuple([c for c in get_possible_moves(board) if last_move_has_won(Board(board.size, board.moves + (c,)))])
+    return tuple(c for c in get_possible_moves(board) if last_move_has_won(Board(board.size, board.moves + (c,))))
 
 
-@mem_cached
+@cached
 def get_first_move(board: Board) -> Cells:
     return () if not board.moves else find_center_cell_moves(board)
 
 
-@mem_cached
+@cached
 def get_moves(board: Board) -> Cells:
     return get_first_move(board) or \
            find_winning_moves(board) or \
@@ -51,12 +51,12 @@ def get_moves(board: Board) -> Cells:
            get_possible_moves(board)
 
 
-@mem_cached
+@cached
 def is_center_cell(cell: Cell, board_size: int) -> bool:
     return cell.row_id not in (0, board_size - 1) and cell.col_id not in (0, board_size - 1)
 
 
-@mem_cached
+@cached
 def is_corner_cell(cell: Cell, board_size: int) -> bool:
     return cell.row_id in (0, board_size - 1) and cell.col_id in (0, board_size - 1)
 

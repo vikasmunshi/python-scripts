@@ -5,67 +5,66 @@
 from collections import Counter
 
 from .types import Board, Cell, Cells, Lines, Player, Players, Score, Scores
-from .util import log_msg, mem_cached, record_final, select_random_cell
+from .util import cached, log_msg, recorded, select_random_cell
 
 
-@mem_cached
+@cached
 def add_move_to_board(board: Board, move: Cell) -> Board:
     return Board(board.size, board.moves + (move,))
 
 
-@mem_cached
+@cached
 def board_is_full(board: Board) -> bool:
     return not get_possible_moves(board)
 
 
-@mem_cached
+@cached
 def create_empty_board(size: int) -> Board:
     return Board(size, ())
 
 
-@record_final
-@mem_cached
+@recorded
+@cached
 def check_winner(board: Board, name: str) -> str:
     return name if last_move_has_won(board) else 'DRAW' if board_is_full(board) else ''
 
 
-@mem_cached
+@cached
 def get_cells(board: Board) -> Cells:
-    return tuple([Cell(row_id, col_id) for row_id in range(board.size) for col_id in range(board.size)])
+    return tuple(Cell(row_id, col_id) for row_id in range(board.size) for col_id in range(board.size))
 
 
-@mem_cached
+@cached
 def get_columns(board: Board) -> Lines:
-    return tuple([tuple([Cell(row_id, col_id) for row_id in range(board.size)]) for col_id in range(board.size)])
+    return tuple(tuple(Cell(row_id, col_id) for row_id in range(board.size)) for col_id in range(board.size))
 
 
-@mem_cached
+@cached
 def get_diagonals(board: Board) -> Lines:
-    return tuple([Cell(n, n) for n in range(board.size)]), \
-           tuple([Cell(n, board.size - 1 - n) for n in range(board.size)])
+    return tuple(Cell(n, n) for n in range(board.size)), tuple(Cell(n, board.size - 1 - n) for n in range(board.size))
 
 
-@mem_cached
+@cached
 def get_lines(board: Board) -> Lines:
     return get_rows(board) + get_columns(board) + get_diagonals(board)
 
 
-@mem_cached
+@cached
 def get_moves_of_last_player(board: Board) -> Cells:
     return board.moves[1 - len(board.moves) % 2::2]
 
 
-@mem_cached
+@cached
 def get_possible_moves(board: Board) -> Cells:
-    return tuple([cell for cell in get_cells(board) if cell not in board.moves])
+    return tuple(cell for cell in get_cells(board) if cell not in board.moves)
 
 
-@mem_cached
+@cached
 def get_rows(board: Board) -> Lines:
-    return tuple([tuple([Cell(row_id, col_id) for col_id in range(board.size)]) for row_id in range(board.size)])
+    return tuple(tuple(Cell(row_id, col_id) for col_id in range(board.size)) for row_id in range(board.size))
 
 
-@mem_cached
+@cached
 def last_move_has_won(board: Board) -> bool:
     return any([all([cell in get_moves_of_last_player(board) for cell in line]) for line in get_lines(board)])
 
@@ -104,7 +103,7 @@ def play_tournament(size: int, num_games: int, players: Players) -> Scores:
     return tuple(sorted(scores, key=lambda s: s.points, reverse=True))
 
 
-@mem_cached
+@cached
 def report_player_made_an_invalid_move(name: str) -> str:
     log_msg('Player {} made an invalid move!!!'.format(name))
     return 'INVALID{}'.format(name)

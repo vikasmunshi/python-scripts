@@ -5,9 +5,9 @@ from .core import *
 
 __package__ = 'tic_tac_toe'
 __version__ = '1.0.1'
-memoize = mem_cached
+memoize = cached
 __all__ = ['Board', 'Cell', 'Cells', 'Player', 'Players', 'Scores',
-           'mem_cached', 'memoize',
+           'cached', 'memoize',
            'get_cells', 'get_possible_moves',
            'last_move_has_won',
            'play_match', 'play_tournament',
