@@ -4,12 +4,12 @@
 from .core import *
 
 __package__ = 'tic_tac_toe'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 memoize = mem_cached
 __all__ = ['Board', 'Cell', 'Cells', 'Player', 'Players', 'Scores',
            'mem_cached', 'memoize',
            'get_cells', 'get_possible_moves',
            'last_move_has_won',
            'play_match', 'play_tournament',
-           'print_to_std_err',
+           'log_msg',
            'select_random_cell', 'strategy']

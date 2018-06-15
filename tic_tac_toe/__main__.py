@@ -10,7 +10,7 @@ from os import environ
 from os.path import basename, dirname, join, splitext
 from time import time
 
-from . import Player, Players, Scores, play_tournament, print_to_std_err, strategy
+from . import Player, Players, Scores, log_msg, play_tournament, strategy
 
 environ['COLUMNS'] = '120'
 
@@ -32,7 +32,7 @@ def load_players(players_folder: str, include_bad: bool = False, ignore_signatur
             player_author = str(getattr(player_strategy_module, '__author__', 'Anon')).replace(' ', '_')
             yield Player('{}_{}'.format(player_name, player_author), player_strategy)
         except (AssertionError, AttributeError, ImportError, SyntaxError, TypeError) as e:
-            print_to_std_err('{} ignored because {}'.format(player_name, str(e)))
+            log_msg('{} ignored because {}'.format(player_name, str(e)))
 
 
 def main() -> Scores:
@@ -54,10 +54,10 @@ if __name__ == '__main__':
     st = time()
     result = main()
     et = time()
-    print_to_std_err('\nTournament executed in {0:0.4f} seconds\n'.format(et - st))
+    log_msg('\nTournament executed in {0:0.4f} seconds\n'.format(et - st))
     longest_name_length = max([len(score.player) for score in result])
     msg = '{:' + str(longest_name_length + 2) + 's}{:9d} {:9.2%} {:9d} {:9d} {:9d} {:9d}'
     header_msg = '{:' + str(longest_name_length + 2) + 's}{}'
-    print(header_msg.format('Player', '   Points   Wins(%)    Losses     Draws     Games Penalties'))
+    log_msg(header_msg.format('Player', '   Points   Wins(%)    Losses     Draws     Games Penalties'))
     for s in result:
-        print(msg.format(s.player, s.points, s.wins / (s.games or 1), s.losses, s.draws, s.games, s.penalties))
+        log_msg(msg.format(s.player, s.points, s.wins / (s.games or 1), s.losses, s.draws, s.games, s.penalties))

@@ -5,7 +5,7 @@
 from collections import Counter
 
 from .types import Board, Cell, Cells, Lines, Player, Players, Score, Scores
-from .util import mem_cached, print_to_std_err, select_random_cell
+from .util import log_msg, mem_cached, record_final, select_random_cell
 
 
 @mem_cached
@@ -23,6 +23,7 @@ def create_empty_board(size: int) -> Board:
     return Board(size, ())
 
 
+@record_final
 @mem_cached
 def check_winner(board: Board, name: str) -> str:
     return name if last_move_has_won(board) else 'DRAW' if board_is_full(board) else ''
@@ -105,7 +106,7 @@ def play_tournament(size: int, num_games: int, players: Players) -> Scores:
 
 @mem_cached
 def report_player_made_an_invalid_move(name: str) -> str:
-    print_to_std_err('Player {} made an invalid move!!!'.format(name))
+    log_msg('Player {} made an invalid move!!!'.format(name))
     return 'INVALID{}'.format(name)
 
 
