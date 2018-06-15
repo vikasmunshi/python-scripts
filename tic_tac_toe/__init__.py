@@ -11,5 +11,6 @@ __all__ = ['Board', 'Cell', 'Cells', 'Player', 'Players', 'Scores',
            'get_cells', 'get_possible_moves',
            'last_move_has_won',
            'play_match', 'play_tournament',
-           'log_msg',
+           'log_err', 'log_msg',
+           'recollect',
            'select_random_cell', 'strategy']

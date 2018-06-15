@@ -10,7 +10,7 @@ from os import environ
 from os.path import basename, dirname, join, splitext
 from time import time
 
-from . import Player, Players, Scores, log_msg, play_tournament, strategy
+from . import Player, Players, Scores, log_err, log_msg, play_tournament, strategy
 
 environ['COLUMNS'] = '120'
 
@@ -32,7 +32,7 @@ def load_players(players_folder: str, include_bad: bool = False, ignore_signatur
             player_author = str(getattr(player_strategy_module, '__author__', 'Anon')).replace(' ', '_')
             yield Player('{}_{}'.format(player_name, player_author), player_strategy)
         except (AssertionError, AttributeError, ImportError, SyntaxError, TypeError) as e:
-            log_msg('{} ignored because {}'.format(player_name, str(e)))
+            log_err('{} ignored because {}'.format(player_name, str(e)))
 
 
 def main() -> Scores:
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     st = time()
     result = main()
     et = time()
-    log_msg('\nTournament executed in {0:0.4f} seconds\n'.format(et - st))
+    log_msg('Tournament completed in {0:0.4f} seconds\n'.format(et - st))
     longest_name_length = max([len(score.player) for score in result])
     msg = '{:' + str(longest_name_length + 2) + 's}{:9d} {:9.2%} {:9d} {:9d} {:9d} {:9d}'
     header_msg = '{:' + str(longest_name_length + 2) + 's}{}'

@@ -5,7 +5,7 @@
 from collections import Counter
 
 from .types import Board, Cell, Cells, Lines, Player, Players, Score, Scores
-from .util import cached, log_msg, recorded, select_random_cell
+from .util import cached, log_err, log_msg, recollect, record_winning_games, select_random_cell
 
 
 @cached
@@ -23,7 +23,7 @@ def create_empty_board(size: int) -> Board:
     return Board(size, ())
 
 
-@recorded
+@record_winning_games
 @cached
 def check_winner(board: Board, name: str) -> str:
     return name if last_move_has_won(board) else 'DRAW' if board_is_full(board) else ''
@@ -94,6 +94,7 @@ def play_match(size: int, num_double_games: int, one: Player, two: Player) -> Sc
 
 
 def play_tournament(size: int, num_games: int, players: Players) -> Scores:
+    log_msg('Tournament started')
     opponents = ((one, two) for one in players for two in players if one is not two)
     match_results = [i for s in (play_match(size, num_games // 4, one, two) for one, two in opponents) for i in s]
     r = {score.player: (0,) * 6 for score in match_results}
@@ -103,9 +104,12 @@ def play_tournament(size: int, num_games: int, players: Players) -> Scores:
     return tuple(sorted(scores, key=lambda s: s.points, reverse=True))
 
 
+recollect = recollect
+
+
 @cached
 def report_player_made_an_invalid_move(name: str) -> str:
-    log_msg('Player {} made an invalid move!!!'.format(name))
+    log_err('Player {} made an invalid move!!!'.format(name))
     return 'INVALID{}'.format(name)
 
 
