@@ -62,6 +62,7 @@ def is_corner_cell(cell: Cell, board_size: int) -> bool:
     return cell.row_id in (0, board_size - 1) and cell.col_id in (0, board_size - 1)
 
 
+@cached
 def recollect_winning_moves(board: Board) -> Cells:
     next_moves = [g[len(board.moves)] for g in recollect(board.moves)]
     if next_moves:
