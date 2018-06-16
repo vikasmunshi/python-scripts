@@ -6,7 +6,7 @@ from json import dump, load
 from os.path import exists, splitext
 
 from .types import Board, Cell, Cells, TypeFuncFinal, TypeMemItem
-from .util import log_msg
+from .util import log_err
 
 __memory_file__ = splitext(__file__)[0] + '.json'
 __memory__ = set()
@@ -16,7 +16,7 @@ __memory__ = set()
 def dump_memory() -> None:
     with open(__memory_file__, 'w') as outfile:
         dump(list(__memory__), outfile)
-        # log_msg('Dumped {} winning games from memory to file'.format(len(memory)))
+    log_err('\nDumped {} winning games from memory to file\n'.format(len(__memory__)))
 
 
 def load_memory() -> None:
@@ -24,7 +24,7 @@ def load_memory() -> None:
     if exists(__memory_file__):
         with open(__memory_file__, 'r') as infile:
             __memory__.update([tuple_of_moves(m) for m in load(infile)])
-    log_msg('Loaded {} winning games from file to memory'.format(len(__memory__)))
+    log_err('\nLoaded {} winning games from file to memory\n'.format(len(__memory__)))
 
 
 def persist(moves: Cells) -> None:
