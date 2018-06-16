@@ -16,7 +16,7 @@ memory = set()
 def dump_memory() -> None:
     with open(memory_file, 'w') as outfile:
         dump(list(memory), outfile)
-    log_err('\nDumped {} winning games from memory to file\n'.format(len(memory)))
+    log_err('\nDumped {} games from memory to file\n'.format(len(memory)))
 
 
 def load_memory() -> None:
@@ -24,7 +24,7 @@ def load_memory() -> None:
     if exists(memory_file):
         with open(memory_file, 'r') as infile:
             memory.update({tuple(Cell(*m) for m in moves) for moves in load(infile)})
-    log_err('\nLoaded {} winning games from file to memory\n'.format(len(memory)))
+    log_err('\nLoaded {} games from file to memory\n'.format(len(memory)))
 
 
 def persist(moves: Cells) -> None:
