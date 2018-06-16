@@ -5,7 +5,7 @@ import atexit
 from json import dump, load
 from os.path import exists, splitext
 
-from .types import Board, Cell, Cells, TypeFuncFinal, TypeMemItem
+from .types import Board, Cell, Cells, TypeFuncFinal
 from .util import log_err
 
 memory_file = splitext(__file__)[0] + '.txt'
@@ -23,17 +23,17 @@ def load_memory() -> None:
     global memory
     if exists(memory_file):
         with open(memory_file, 'r') as infile:
-            memory.update([tupleify(moves) for moves in load(infile)])
+            memory.update({tuple(Cell(*m) for m in moves) for moves in load(infile)})
     log_err('\nLoaded {} winning games from file to memory\n'.format(len(memory)))
 
 
 def persist(moves: Cells) -> None:
     global memory
-    memory.add(tupleify(moves))
+    memory.add(moves)
 
 
 def recollect(moves: Cells) -> Cells:
-    return tuple(Cell(*m) for m in memory if m[:len(moves)] == tupleify(moves))
+    return tuple(m for m in memory if m[:len(moves)] == moves)
 
 
 def remember_winning_games(func: TypeFuncFinal) -> TypeFuncFinal:
@@ -43,10 +43,6 @@ def remember_winning_games(func: TypeFuncFinal) -> TypeFuncFinal:
         return r
 
     return f
-
-
-def tupleify(moves: Cells) -> TypeMemItem:
-    return tuple(tuple(cell) for cell in moves)
 
 
 load_memory()

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #   tic_tac_toe/__main__.py
-
 from argparse import ArgumentParser
 from glob import iglob
 from importlib.util import module_from_spec, spec_from_file_location
