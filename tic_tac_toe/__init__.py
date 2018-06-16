@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #   tic_tac_toe/__init__.py
-from .core import *
+from .core import (Board, Cell, Cells, Player, Players, Scores, cached, get_cells, get_possible_moves,
+                   last_move_has_won, log_err, log_msg, play_match, play_tournament, recollect, select_random_cell,
+                   strategy)
+from .memory import recollect
 
 __package__ = 'tic_tac_toe'
 __version__ = '1.0.1'

@@ -3,7 +3,7 @@
 #   tic_tac_toe/types.py
 
 from collections import namedtuple
-from typing import Tuple
+from typing import Callable, Tuple
 
 Board = namedtuple('Board', ['size', 'moves'])
 Cell = namedtuple('Cell', ['row_id', 'col_id'])
@@ -13,3 +13,5 @@ Player = namedtuple('Player', ['name', 'strategy'])
 Players = Tuple[Player, ...]
 Score = namedtuple('Score', ['player', 'points', 'wins', 'draws', 'losses', 'games', 'penalties'])
 Scores = Tuple[Score, ...]
+TypeFuncFinal = Callable[[Board], str]
+TypeMemItem = Tuple[Tuple, ...]

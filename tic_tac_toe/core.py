@@ -4,8 +4,9 @@
 
 from collections import Counter
 
+from .memory import recollect, remember_winning_games
 from .types import Board, Cell, Cells, Lines, Player, Players, Score, Scores
-from .util import cached, log_err, log_msg, recollect, record_winning_games, select_random_cell
+from .util import cached, log_err, log_msg, select_random_cell
 
 
 @cached
@@ -23,7 +24,7 @@ def create_empty_board(size: int) -> Board:
     return Board(size, ())
 
 
-@record_winning_games
+@remember_winning_games
 @cached
 def check_winner(board: Board, name: str) -> str:
     return name if last_move_has_won(board) else 'DRAW' if board_is_full(board) else ''
