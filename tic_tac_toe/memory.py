@@ -8,32 +8,32 @@ from os.path import exists, splitext
 from .types import Board, Cell, Cells, TypeFuncFinal, TypeMemItem
 from .util import log_err
 
-__memory_file__ = splitext(__file__)[0] + '.json'
-__memory__ = set()
+memory_file = splitext(__file__)[0] + '.txt'
+memory = set()
 
 
 @atexit.register
 def dump_memory() -> None:
-    with open(__memory_file__, 'w') as outfile:
-        dump(list(__memory__), outfile)
-    log_err('\nDumped {} winning games from memory to file\n'.format(len(__memory__)))
+    with open(memory_file, 'w') as outfile:
+        dump(list(memory), outfile)
+    log_err('\nDumped {} winning games from memory to file\n'.format(len(memory)))
 
 
 def load_memory() -> None:
-    global __memory__
-    if exists(__memory_file__):
-        with open(__memory_file__, 'r') as infile:
-            __memory__.update([tuple_of_moves(m) for m in load(infile)])
-    log_err('\nLoaded {} winning games from file to memory\n'.format(len(__memory__)))
+    global memory
+    if exists(memory_file):
+        with open(memory_file, 'r') as infile:
+            memory.update([tupleify(moves) for moves in load(infile)])
+    log_err('\nLoaded {} winning games from file to memory\n'.format(len(memory)))
 
 
 def persist(moves: Cells) -> None:
-    global __memory__
-    __memory__.add(tuple_of_moves(moves))
+    global memory
+    memory.add(tupleify(moves))
 
 
 def recollect(moves: Cells) -> Cells:
-    return tuple(Cell(*m) for m in __memory__ if m[:len(moves)] == tuple_of_moves(moves))
+    return tuple(Cell(*m) for m in memory if m[:len(moves)] == tupleify(moves))
 
 
 def remember_winning_games(func: TypeFuncFinal) -> TypeFuncFinal:
@@ -45,8 +45,8 @@ def remember_winning_games(func: TypeFuncFinal) -> TypeFuncFinal:
     return f
 
 
-def tuple_of_moves(moves: Cells) -> TypeMemItem:
-    return tuple(tuple(c) for c in moves)
+def tupleify(moves: Cells) -> TypeMemItem:
+    return tuple(tuple(cell) for cell in moves)
 
 
 load_memory()
