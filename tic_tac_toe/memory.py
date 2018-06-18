@@ -6,40 +6,38 @@ from json import dump, load
 from os.path import exists, splitext
 
 from .types import Board, Cell, Cells, TypeFuncFinal
-from .util import log_err
 
-memory_file = splitext(__file__)[0] + '.txt'
-memory = set()
+memory_file = splitext(__file__)[0] + '.json'
+memory = []
 
 
 @atexit.register
 def dump_memory() -> None:
     with open(memory_file, 'w') as outfile:
-        dump(list(memory), outfile)
-    log_err('\nDumped {} games from memory to file\n'.format(len(memory)))
+        out = sorted(set(memory))
+        dump(out, outfile)
 
 
 def load_memory() -> None:
     global memory
     if exists(memory_file):
         with open(memory_file, 'r') as infile:
-            memory.update({tuple(Cell(*m) for m in moves) for moves in load(infile)})
-    log_err('\nLoaded {} games from file to memory\n'.format(len(memory)))
+            memory.extend([(tuple(Cell(*m) for m in moves), result) for moves, result in load(infile)])
 
 
-def persist(moves: Cells) -> None:
+def persist(moves: Cells, result: str) -> None:
     global memory
-    memory.add(moves)
+    memory.append((moves, result))
 
 
 def recollect(moves: Cells) -> Cells:
-    return tuple(m for m in memory if m[:len(moves)] == moves)
+    return tuple({m for m in memory if m[0][:len(moves)] == moves})
 
 
-def remember_winning_games(func: TypeFuncFinal) -> TypeFuncFinal:
+def remember_games(func: TypeFuncFinal) -> TypeFuncFinal:
     def f(board: Board, name: str) -> str:
         r = func(board, name)
-        if r and r != 'DRAW': persist(board.moves)
+        if r: persist(board.moves, 'D' if r == 'DRAW' else ('O', 'X')[len(board.moves) % 2])
         return r
 
     return f

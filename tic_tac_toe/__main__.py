@@ -9,7 +9,7 @@ from os import environ
 from os.path import basename, dirname, join, splitext
 from time import time
 
-from . import Player, Players, Scores, log_err, log_msg, play_tournament, strategy
+from . import Player, Players, log_err, log_msg, play_tournament_eliminate, play_tournament_points, strategy
 
 environ['COLUMNS'] = '120'
 
@@ -34,19 +34,28 @@ def load_players(players_folder: str, include_bad: bool = False, ignore_signatur
             log_err('{} ignored because {}'.format(player_name, str(e)))
 
 
-def main() -> Scores:
+def main() -> str:
     parser = ArgumentParser(description='Play Tic Tac Toe Tournament')
+
     parser.add_argument('-d', dest='strategies_folder', type=str,
                         help='location of player strategy files, default is TIC_TAC_TOE_DIR/strategies')
     parser.add_argument('-g', dest='games', default=1000, type=int,
                         help='number of games per match, default is 1000')
+    parser.add_argument('-t', dest='tournament_type', choices=('fight', 'points'), default='fight',
+                        help='fight for elimination or play for points, default is elimination')
     parser.add_argument('--include_bad', action='store_true',
                         help='include files matching bad*.py in strategies folder, ignored by default')
     parser.add_argument('--py2', action='store_true',
                         help='also load python 2 strategy files')
     args = parser.parse_args()
     strategies_folder = args.strategies_folder or join(dirname(__file__), 'strategies')
-    return play_tournament(3, args.games, players=tuple(load_players(strategies_folder, args.include_bad, args.py2)))
+    if args.tournament_type == 'fight':
+        return play_tournament_eliminate(size=3, num_games=args.games,
+                                         players=tuple(load_players(strategies_folder, args.include_bad, args.py2)),
+                                         round_num=0)
+    else:
+        return play_tournament_points(size=3, num_games=args.games,
+                                      players=tuple(load_players(strategies_folder, args.include_bad, args.py2)))
 
 
 if __name__ == '__main__':
@@ -54,9 +63,4 @@ if __name__ == '__main__':
     result = main()
     et = time()
     log_msg('Tournament completed in {0:0.4f} seconds\n'.format(et - st))
-    longest_name_length = max([len(score.player) for score in result])
-    msg = '{:' + str(longest_name_length + 2) + 's}{:9d} {:9.2%} {:9d} {:9d} {:9d} {:9d}'
-    header_msg = '{:' + str(longest_name_length + 2) + 's}{}'
-    log_msg(header_msg.format('Player', '   Points   Wins(%)    Losses     Draws     Games Penalties'))
-    for s in result:
-        log_msg(msg.format(s.player, s.points, s.wins / (s.games or 1), s.losses, s.draws, s.games, s.penalties))
+    log_msg(result + '\n')
