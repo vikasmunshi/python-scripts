@@ -4,9 +4,9 @@
 
 from collections import Counter
 
-from .memory import remember_games
+from .memory import remember_game
 from .types import Board, Cell, Cells, Lines, Player, Players, Score, Scores
-from .util import cached, log_err, select_random_cell
+from .util import cached, logged, select_random_cell
 
 
 @cached
@@ -24,8 +24,8 @@ def create_empty_board(size: int) -> Board:
     return Board(size, ())
 
 
-@remember_games
 @cached
+@remember_game
 def check_winner(board: Board, name: str) -> str:
     return name if last_move_has_won(board) else 'DRAW' if board_is_full(board) else ''
 
@@ -72,7 +72,8 @@ def last_move_has_won(board: Board) -> bool:
 
 def play(board: Board, one: Player, two: Player) -> str:
     move = one.strategy(board)
-    if move not in get_possible_moves(board): return report_player_made_an_invalid_move(one.name)
+    if move not in get_possible_moves(board):
+        return player_made_an_invalid_move(one.name)
     return check_winner(add_move_to_board(board, move), one.name) or play(add_move_to_board(board, move), two, one)
 
 
@@ -84,63 +85,55 @@ def play_game_set(size: int, one: Player, two: Player) -> (str, str):
     return play_game(size, one, two), play_game(size, two, one)
 
 
-def play_match_eliminate(size: int, num_double_games: int, one: Player, two: Player, round_num: int) -> (str,):
+# noinspection PyUnusedLocal
+@logged
+def play_match_eliminate(size: int, num_double_games: int, one: Player, two: Player, round_num: int) -> Players:
     results = Counter([i for s in (play_game_set(size, one, two) for _ in range(num_double_games)) for i in s])
     wins_one, wins_two, draws = results.get(one.name, 0), results.get(two.name, 0), results.get('DRAW', 0)
-    invalid_one = results.get('INVALID{}'.format(one.name), 0)
-    invalid_two = results.get('INVALID{}'.format(two.name), 0)
-    eliminate = ((one.name,) if invalid_one or wins_one < wins_two else ()) + \
-                ((two.name,) if invalid_two or wins_two < wins_one else ())
-    log_err('round {}{} match {} vs {}: {}'.format(round_num,
-                                                   ' eliminated {} in'.format(','.join(eliminate)) if eliminate else '',
-                                                   one.name, two.name,
-                                                   ', '.join(['{} {}'.format(k, v) for k, v in results.items()])))
-    return eliminate
+    invalid_one = results.get('INVALID {}'.format(one.name), 0)
+    invalid_two = results.get('INVALID {}'.format(two.name), 0)
+    return ((one,) if invalid_one or wins_one < wins_two else ()) + \
+           ((two,) if invalid_two or wins_two < wins_one else ())
 
 
+@logged
 def play_match_points(size: int, num_double_games: int, one: Player, two: Player) -> Scores:
     results = Counter([i for s in (play_game_set(size, one, two) for _ in range(num_double_games)) for i in s])
     wins_one, wins_two, draws = results.get(one.name, 0), results.get(two.name, 0), results.get('DRAW', 0)
-    invalid_one = results.get('INVALID{}'.format(one.name), 0)
-    invalid_two = results.get('INVALID{}'.format(two.name), 0)
+    invalid_one = results.get('INVALID {}'.format(one.name), 0)
+    invalid_two = results.get('INVALID {}'.format(two.name), 0)
     valid_games = wins_one + wins_two + draws
     return (Score(one.name, wins_one - wins_two - invalid_one, wins_one, wins_two, draws, valid_games, invalid_one),
             Score(two.name, wins_two - wins_one - invalid_two, wins_two, wins_one, draws, valid_games, invalid_two))
 
 
-def play_tournament_points(size: int, num_games: int, players: Players) -> str:
+def play_tournament_points(size: int, num_games: int, players: Players) -> Scores:
     results = [i for s in (play_match_points(size, num_games // 2, one, two)
                            for n, one in enumerate(players) for two in players[n + 1:])
                for i in s]
     r = {score.player: (0,) * 6 for score in results}
     for s in results:
         r[s.player] = [x + y for x, y in zip(r[s.player], (s.points, s.wins, s.losses, s.draws, s.games, s.penalties))]
-    scores = [Score(player, *result) for player, result in r.items()]
-    longest_name_length = max([len(score.player) for score in scores])
-    line = '{:' + str(longest_name_length + 2) + 's}{:9d} {:9.2%} {:9d} {:9d} {:9d} {:9d}\n'
-    header = '{:' + str(longest_name_length + 2) + 's}{}'
-    return header.format('Player', '   Points   Wins(%)    Losses     Draws     Games Penalties\n') + \
-           ''.join([line.format(s.player, s.points, s.wins / (s.games or 1), s.losses, s.draws, s.games, s.penalties)
-                    for s in scores])
+    return tuple(sorted([Score(player, *result) for player, result in r.items()], key=lambda s: s.points, reverse=True))
 
 
-def play_tournament_eliminate(size: int, num_games: int, players: Players, round_num: int, max_rounds: int = 99) -> str:
-    return ('Winner is ' if len(players) == 1 else 'Winners are ') + ', '.join(tuple(p.name for p in players)) \
-        if len(players) <= 1 or round_num > max_rounds else \
-        play_tournament_eliminate(size=size,
-                                  num_games=num_games,
-                                  players=tuple(player for player in players if player.name not in
-                                                [i for s in (play_match_eliminate(size, num_games // 2, o, t, round_num)
-                                                             for n, o in enumerate(players) for t in players[n + 1:])
-                                                 for i in s]),
-                                  round_num=round_num + 1,
-                                  max_rounds=max_rounds)
+def play_tournament_eliminate(size: int, num_games: int, players: Players, round_num: int) -> Players:
+    if len(players) <= 1 or round_num > 99:
+        return players
+    else:
+        eliminated = [i for s in (play_match_eliminate(size, num_games // 2, one, two, round_num)
+                                  for n, one in enumerate(players) for two in players[n + 1:])
+                      for i in s]
+        return play_tournament_eliminate(size=size,
+                                         num_games=num_games,
+                                         players=tuple(player for player in players if player not in eliminated),
+                                         round_num=round_num + 1)
 
 
 @cached
-def report_player_made_an_invalid_move(name: str) -> str:
-    log_err('Player {} made an invalid move!!!'.format(name))
-    return 'INVALID{}'.format(name)
+@logged
+def player_made_an_invalid_move(name: str) -> str:
+    return 'INVALID {}'.format(name)
 
 
 def strategy(board: Board) -> Cell:

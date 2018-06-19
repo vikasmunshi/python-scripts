@@ -9,7 +9,7 @@ from os import environ
 from os.path import basename, dirname, join, splitext
 from time import time
 
-from . import Player, Players, log_err, log_msg, play_tournament_eliminate, play_tournament_points, strategy
+from . import Player, Players, logged, play_tournament_eliminate, play_tournament_points, strategy
 
 environ['COLUMNS'] = '120'
 
@@ -19,19 +19,21 @@ def load_players(players_folder: str, include_bad: bool = False, ignore_signatur
     for player_file in iglob(join(players_folder, '[!_]*.py')):
         player_name = splitext(basename(player_file))[0]
         try:
-            if not include_bad and player_name.startswith('bad'): continue
+            if not include_bad and player_name.startswith('bad'):
+                continue
             player_strategy_spec = spec_from_file_location(player_name, player_file)
             player_strategy_module = module_from_spec(player_strategy_spec)
             player_strategy_spec.loader.exec_module(player_strategy_module)
             player_strategy = getattr(player_strategy_module, 'strategy')
-            assert isfunction(player_strategy), \
-                'strategy is {} and not function'.format(type(player_strategy).__name__)
+            assert isfunction(player_strategy), 'strategy is {} and not function'.format(type(player_strategy).__name__)
             assert ignore_signature or signature(player_strategy) == expected_signature, \
                 'signature is not strategy{}'.format(expected_signature)
-            player_author = str(getattr(player_strategy_module, '__author__', 'Anon')).replace(' ', '_')
-            yield Player('{}_{}'.format(player_name, player_author), player_strategy)
+            yield Player(player_name, player_strategy)
         except (AssertionError, AttributeError, ImportError, SyntaxError, TypeError) as e:
-            log_err('{} ignored because {}'.format(player_name, str(e)))
+            log('{} ignored because {}'.format(player_name, str(e)))
+
+
+log = logged(lambda msg: msg)
 
 
 def main() -> str:
@@ -47,20 +49,29 @@ def main() -> str:
                         help='include files matching bad*.py in strategies folder, ignored by default')
     parser.add_argument('--py2', action='store_true',
                         help='also load python 2 strategy files')
+
     args = parser.parse_args()
     strategies_folder = args.strategies_folder or join(dirname(__file__), 'strategies')
     if args.tournament_type == 'fight':
-        return play_tournament_eliminate(size=3, num_games=args.games,
-                                         players=tuple(load_players(strategies_folder, args.include_bad, args.py2)),
-                                         round_num=0)
+        winners = play_tournament_eliminate(size=3, num_games=args.games,
+                                            players=tuple(load_players(strategies_folder, args.include_bad, args.py2)),
+                                            round_num=0)
+        return ('Winner is {}\n'.format(winners[0].name) if len(winners) == 1 else
+                'Winners are {}\n'.format(', '.join([player.name for player in winners])))
     else:
-        return play_tournament_points(size=3, num_games=args.games,
-                                      players=tuple(load_players(strategies_folder, args.include_bad, args.py2)))
+        scores = play_tournament_points(size=3, num_games=args.games,
+                                        players=tuple(load_players(strategies_folder, args.include_bad, args.py2)))
+        longest_name_length = max([len(score.player) for score in scores])
+        l = '{:' + str(longest_name_length + 2) + 's}{:9d} {:9.2%} {:9d} {:9d} {:9d} {:9d}\n'
+        h = '{:' + str(longest_name_length + 2) + 's}{}\n'
+        return (h.format('Player', '   Points   Wins(%)    Losses     Draws     Games Penalties') +
+                ''.join([l.format(s.player, s.points, s.wins / (s.games or 1), s.losses, s.draws, s.games, s.penalties)
+                         for s in scores]))
 
 
 if __name__ == '__main__':
     st = time()
     result = main()
     et = time()
-    log_msg('Tournament completed in {0:0.4f} seconds\n'.format(et - st))
-    log_msg(result + '\n')
+    log('Tournament completed in {0:0.4f} seconds'.format(et - st))
+    print('\n' + result)

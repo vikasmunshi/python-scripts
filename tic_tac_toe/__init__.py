@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #   tic_tac_toe/__init__.py
-from .core import Board, Cell, Cells, Player, Players, Scores, get_cells, get_possible_moves, last_move_has_won, \
-    play_tournament_eliminate, play_tournament_points, strategy
-from .memory import recollect
-from .util import cached, log_err, log_msg, select_random_cell
+from .core import *
+from .memory import recollect_all, recollect_decided
 
 __package__ = 'tic_tac_toe'
 __version__ = '1.0.1'
@@ -14,6 +12,6 @@ __all__ = ['Board', 'Cell', 'Cells', 'Player', 'Players', 'Scores',
            'get_cells', 'get_possible_moves',
            'last_move_has_won',
            'play_tournament_eliminate', 'play_tournament_points',
-           'log_err', 'log_msg',
-           'recollect',
+           'logged',
+           'recollect_all', 'recollect_decided',
            'select_random_cell', 'strategy']

@@ -61,7 +61,7 @@ def is_corner_cell(cell, board_size):
 
 @memoize
 def recollect_winning_moves(board):
-    next_moves = [g[len(board.moves)] for g in recollect(board.moves)]
+    next_moves = [g[len(board.moves)] for g in recollect_decided(board.moves)]
     if next_moves:
         return Cell(*max(set(next_moves), key=next_moves.count)),
     return ()
