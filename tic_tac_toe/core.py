@@ -118,7 +118,7 @@ def play_tournament_points(size: int, num_games: int, players: Players) -> Score
 
 
 def play_tournament_eliminate(size: int, num_games: int, players: Players, round_num: int) -> Players:
-    if len(players) <= 1 or round_num > 99:
+    if len(players) <= 1 or round_num > 9:
         return players
     else:
         eliminated = [i for s in (play_match_eliminate(size, num_games // 2, one, two, round_num)
