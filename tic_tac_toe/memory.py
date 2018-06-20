@@ -5,9 +5,9 @@ import atexit
 from json import dump, load
 from os.path import exists, splitext
 
-from .types import Board, Cell, Cells, TypeFuncFinal
+from .types import Board, Cell, Cells, Player, TypeFuncPlay
 
-memory_file = splitext(__file__)[0] + '.txt'
+memory_file = splitext(__file__)[0] + '.json'
 memory = []
 
 
@@ -38,11 +38,11 @@ def recollect_decided(moves: Cells) -> Cells:
     return tuple({m[0] for m in memory if m[1] != 'D' and m[0][:len(moves)] == moves})
 
 
-def remember_game(func: TypeFuncFinal) -> TypeFuncFinal:
-    def f(board: Board, name: str) -> str:
-        r = func(board, name)
+def remembered(func: TypeFuncPlay) -> TypeFuncPlay:
+    def f(board: Board, one: Player, two: Player) -> str:
+        r = func(board, one, two)
         if r:
-            persist(board.moves, 'D' if r == 'DRAW' else ('O', 'X')[len(board.moves) % 2])
+            persist(board.moves, 'D' if 'draw' in r else ('O', 'X')[len(board.moves) % 2])
         return r
 
     return f
