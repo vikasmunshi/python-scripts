@@ -5,14 +5,14 @@ from setuptools import setup
 
 setup(
     name='akira',
-    version='1.0.2',
+        version='1.0.3',
     author='Vikas Munshi',
     author_email='vikas.munshi@gmail.com',
     url='https://github.com/vikasmunshi/python-scripts.git',
     description='Poetry in Python',
     packages=['tic_tac_toe', 'tic_tac_toe.strategies'],
     package_dir={'tic_tac_toe': 'tic_tac_toe'},
-    package_data={'tic_tac_toe': 'tic_tac_toe/memory.txt'},
+        package_data={'tic_tac_toe': 'tic_tac_toe/memory.json'},
     install_requires=[],
     license='MIT License',
     platforms=['any'],

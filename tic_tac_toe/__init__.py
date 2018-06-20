@@ -6,7 +6,7 @@ from .memory import recollect_all, recollect_decided
 from .util import printed
 
 __package__ = 'tic_tac_toe'
-__version__ = '1.0.1'
+__version__ = '1.0.3'
 memoize = cached
 __all__ = ['Board', 'Cell', 'Cells', 'Player', 'Players', 'Scores',
            'cached', 'memoize',
