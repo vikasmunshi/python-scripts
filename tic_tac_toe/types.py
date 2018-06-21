@@ -16,5 +16,7 @@ Players = Tuple[Player, ...]
 Score = namedtuple('Score', ('player', 'points', 'wins', 'draws', 'losses', 'games', 'penalties'))
 Scores = Tuple[Score, ...]
 TypeFunc = Callable[[tuple, dict], str]
+TypeFuncBoard = Callable[[Board], str]
+TypeFuncGame = Callable[[int, Player, Player], str]
 TypeFuncPlay = Callable[[Board, Player, Player], str]
 TypeTupleOfTuples = Union[Tuple[Tuple, ...], Generator[Tuple[Tuple, ...], None, None]]

@@ -5,7 +5,7 @@ from .core import *
 from .memory import recollect
 
 __package__ = 'tic_tac_toe'
-__version__ = '1.3.1'
+__version__ = '1.3.2'
 memoize = cached
 __all__ = ['Board', 'Cell', 'Cells', 'Player', 'Players', 'Scores',
            'cached', 'memoize',
