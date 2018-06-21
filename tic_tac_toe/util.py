@@ -5,7 +5,7 @@ from collections import Counter
 from functools import lru_cache
 from io import TextIOBase
 from random import choice
-from sys import stderr, stdout
+from sys import stderr
 
 from .types import Cell, Cells, Player, TypeFunc, TypeTupleOfTuples
 
@@ -47,7 +47,7 @@ def logged(func: TypeFunc, log_file: TextIOBase = stderr) -> TypeFunc:
     return f
 
 
-def printed(func: TypeFunc, log_file: TextIOBase = stdout) -> TypeFunc:
+def printed(func: TypeFunc, log_file: TextIOBase = stderr) -> TypeFunc:
     def f(*args, **kwargs) -> str:
         r = func(*args, **kwargs)
         print(r, file=log_file)

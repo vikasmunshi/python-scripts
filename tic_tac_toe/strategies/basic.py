@@ -31,11 +31,11 @@ def get_moves(board: Board) -> Cells:
 
 @cached
 def recollect_winning_move(board: Board) -> Cells:
-    next_moves = [g[len(board.moves)] for g in recollect_decided(board.moves)]
+    next_moves = tuple((moves[len(board.moves)], result) for moves, result in recollect(board.moves))
     if next_moves:
-        return Cell(*max(set(next_moves), key=next_moves.count)),
+        return Cell(*max(set(next_moves), key=lambda x: sum(1 for _ in x if x[1] != 'D') / next_moves.count(x))[0]),
     return ()
 
 
 def strategy(board: Board) -> Cell:
-    return Cell(1, 1) if not board.moves else select_random_cell(get_moves(board))
+    return select_random_cell(get_moves(board))

@@ -30,12 +30,8 @@ def persist(moves: Cells, result: str) -> None:
     memory.append((moves, result))
 
 
-def recollect_all(moves: Cells) -> Cells:
-    return tuple({m[0] for m in memory if m[0][:len(moves)] == moves})
-
-
-def recollect_decided(moves: Cells) -> Cells:
-    return tuple({m[0] for m in memory if m[1] != 'D' and m[0][:len(moves)] == moves})
+def recollect(moves: Cells) -> Cells:
+    return tuple({m for m in memory if m[0][:len(moves)] == moves})
 
 
 def remembered(func: TypeFuncPlay) -> TypeFuncPlay:

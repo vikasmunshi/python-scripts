@@ -9,7 +9,7 @@ from os import environ
 from os.path import basename, dirname, join, splitext
 from time import time
 
-from . import Player, Players, logged, play_tournament_eliminate, play_tournament_points, strategy
+from . import Player, Players, play_tournament_eliminate, play_tournament_points, strategy
 
 environ['COLUMNS'] = '120'
 
@@ -30,10 +30,7 @@ def load_players(players_folder: str, include_bad: bool = False, ignore_signatur
                 'signature is not strategy{}'.format(expected_signature)
             yield Player(player_name, player_strategy)
         except (AssertionError, AttributeError, ImportError, SyntaxError, TypeError) as e:
-            log('{} ignored because {}'.format(player_name, str(e)))
-
-
-log = logged(lambda msg: msg)
+            print('{} ignored because {}'.format(player_name, str(e)))
 
 
 def main() -> str:
@@ -73,5 +70,5 @@ if __name__ == '__main__':
     st = time()
     result = main()
     et = time()
-    log('Tournament completed in {0:0.4f} seconds'.format(et - st))
+    print('Tournament completed in {0:0.4f} seconds'.format(et - st))
     print('\n' + result)
