@@ -37,4 +37,4 @@ def update_board(board: Board) -> str:
     for x, m in ((p[c.col_id + c.row_id * board.size], ('X', 'O')[i % 2]) for i, c in enumerate(board.moves)):
         b = b[:x] + m + b[x + 1:]
     b = b.replace('.', ' ')
-    return '\tmove: {} {}\n{}'.format(len(board.moves), board.moves, b)
+    return '\tmove: {} {}\n{}'.format(len(board.moves), board.moves[-1], b)
