@@ -4,7 +4,7 @@
 from .memory import remembered
 from .types import Board, Cell, Cells, Lines, Player, Players, Score, Scores
 from .util import cached, count_sub_items, decided, draw, flatten, invalid, logged, select_random_cell
-from .visualize import displayed, show_result
+from .visualize import displayed
 
 
 @cached
@@ -72,8 +72,7 @@ def last_move_has_won(board: Board) -> bool:
 def play(board: Board, one: Player, two: Player) -> str:
     move = one.strategy(board)
     if move not in get_possible_moves(board):
-        show_result(invalid(one, two) + str(move))
-        return invalid(one, two)
+        return report_invalid(add_move_to_board(board, move if isinstance(move, Cell) else str(move)), one, two)
     return check_winner(add_move_to_board(board, move), one, two) or play(add_move_to_board(board, move), two, one)
 
 
@@ -128,6 +127,12 @@ def play_tournament_eliminate(size: int, num_games: int, players: Players, round
                                          players=tuple(player for player in players if player not in eliminated),
                                          round_num=round_num + 1,
                                          rounds=rounds + int(eliminated != 0))
+
+
+# noinspection PyUnusedLocal
+@displayed
+def report_invalid(board: Board, one: Player, two: Player) -> str:
+    return invalid(one, two)
 
 
 def strategy(board: Board) -> Cell:

@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 #   tic_tac_toe/visualize.py
 
-from .types import Board, Player, TypeFuncPlay
+from .types import Board, Cell, Player, TypeFuncPlay
 from .util import cached, printed
 
 
 def displayed(func: TypeFuncPlay) -> TypeFuncPlay:
     def f(board: Board, one: Player, two: Player) -> str:
-        if len(board.moves) == 1:
+        if len(board.moves) <= 1:
             show_new_board(one, two)
         update_board(board)
         r = func(board, one, two)
@@ -34,7 +34,9 @@ def show_result(r: str) -> str:
 def update_board(board: Board) -> str:
     b = '\t\t' + ('____' * board.size + '\n\t\t|' + ' . |' * board.size + '\n\t\t') * board.size + '____' * board.size
     p = tuple(i for i, c in enumerate(b) if c == '.')
-    for x, m in ((p[c.col_id + c.row_id * board.size], ('X', 'O')[i % 2]) for i, c in enumerate(board.moves)):
-        b = b[:x] + m + b[x + 1:]
+    for x, m in reversed(tuple((c.col_id + c.row_id * board.size, ('X', 'O')[i % 2]) for
+                               i, c in enumerate(board.moves) if isinstance(c, Cell))):
+        if x < len(p):
+            b = b[:p[x]] + m + b[p[x] + 1:]
     b = b.replace('.', ' ')
     return '\tmove: {} {}\n{}'.format(len(board.moves), board.moves[-1], b)
