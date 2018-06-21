@@ -33,7 +33,7 @@ def get_moves(board: Board) -> Cells:
 def recollect_winning_move(board: Board) -> Cells:
     next_moves = tuple((moves[len(board.moves)], result) for moves, result in recollect(board.moves))
     if next_moves:
-        return Cell(*max(set(next_moves), key=lambda x: sum(1 for _ in x if x[1] != 'D') / next_moves.count(x))[0]),
+        return Cell(*max(next_moves, key=lambda x: sum(1 for _ in x if x[1] != 'D') / next_moves.count(x))[0]),
     return ()
 
 
