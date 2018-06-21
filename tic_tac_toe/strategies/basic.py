@@ -38,4 +38,4 @@ def recollect_winning_move(board: Board) -> Cells:
 
 
 def strategy(board: Board) -> Cell:
-    return select_random_cell(get_moves(board))
+    return Cell(1, 1) if not board.moves else select_random_cell(get_moves(board))
