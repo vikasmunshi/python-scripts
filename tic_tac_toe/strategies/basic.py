@@ -22,6 +22,7 @@ def get_moves(board: Board) -> Cells:
            get_possible_moves(board)
 
 
+@cached
 def recollect_winning_move(board: Board) -> Cells:
     def eval_score(m: dict) -> float:
         return ((m['wins'] - m['draws']) ^ 2) / m['count']

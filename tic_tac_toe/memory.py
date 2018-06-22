@@ -6,6 +6,7 @@ from json import dump, load
 from os.path import exists, splitext
 
 from .types import Board, Cell, Cells, TypeFuncPlay
+from .util import cached
 
 memory_file = splitext(__file__)[0] + '.json'
 memory = []
@@ -30,6 +31,7 @@ def persist(moves: Cells, result: str) -> None:
     memory.append((moves, result))
 
 
+@cached
 def recollect(moves: Cells) -> Cells:
     return tuple({m for m in memory if m[0][:len(moves)] == moves})
 
