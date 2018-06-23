@@ -5,45 +5,59 @@ from tic_tac_toe import *
 __author__ = 'Vikas Munshi'
 
 
-@cached
-def find_defensive_moves(board: Board) -> Cells:
-    return tuple(c for c in get_possible_moves(board) if last_move_has_won(Board(board.size, board.moves + ((), c))))
+@memoize
+def find_center_cell_moves(board):
+    return tuple(c for c in get_free_cells(board) if is_center_cell(c, board.size))
 
 
-@cached
-def find_winning_moves(board: Board) -> Cells:
-    return tuple(c for c in get_possible_moves(board) if last_move_has_won(Board(board.size, board.moves + (c,))))
+@memoize
+def find_corner_cell_moves(board):
+    return tuple(c for c in get_free_cells(board) if is_corner_cell(c, board.size))
 
 
-def get_moves(board: Board) -> Cells:
-    return find_winning_moves(board) or \
+@memoize
+def find_defensive_moves(board):
+    return tuple(c for c in get_free_cells(board) if last_move_has_won(Board(board.size, board.moves + ((), c))))
+
+
+@memoize
+def find_winning_in_two_moves(board):
+    return tuple(i for s in
+                 [(m1, m2) for n, m1 in enumerate(get_free_cells(board)) for m2 in get_free_cells(board)[n + 1:]
+                  if last_move_has_won(Board(board.size, board.moves + (m1, (), m2)))]
+                 for i in s)
+
+
+@memoize
+def find_winning_moves(board):
+    return tuple(c for c in get_free_cells(board) if last_move_has_won(Board(board.size, board.moves + (c,))))
+
+
+@memoize
+def get_first_move(board):
+    return () if not board.moves else find_center_cell_moves(board)
+
+
+@memoize
+def get_moves(board):
+    return get_first_move(board) or \
+           find_winning_moves(board) or \
            find_defensive_moves(board) or \
-           recollect_winning_move(board) or \
-           get_possible_moves(board)
+           find_winning_in_two_moves(board) or \
+           find_corner_cell_moves(board) or \
+           find_center_cell_moves(board) or \
+           get_free_cells(board)
 
 
-@cached
-def recollect_winning_move(board: Board) -> Cells:
-    def eval_score(m: dict) -> float:
-        return ((m['wins'] - m['draws']) ^ 2) / m['count']
+@memoize
+def is_center_cell(cell, board_size):
+    return cell.row_id not in (0, board_size - 1) and cell.col_id not in (0, board_size - 1)
 
-    win_mark = ('X', 'O')[len(board.moves) % 2]
-    move_num = len(board.moves)
-    moves = tuple((moves[move_num], result) for moves, result in recollect(board.moves))
-    if moves:
-        scores = {move[0]: {'count': 0, 'wins': 0, 'losses': 0, 'draws': 0} for move in moves}
-        for move, result in moves:
-            scores[move]['count'] += 1
-            scores[move]['wins'] += 1 if result == win_mark else 0
-            scores[move]['losses'] += 1 if result != 'D' and result != win_mark else 0
-            scores[move]['draws'] += 1 if result == 'D' else 0
-            scores[move]['score'] = eval_score(scores[move])
 
-        winning_moves = tuple(filter(lambda m: m[1]['wins'] > 0 and m[1]['losses'] == 0, scores.items()))
-        if winning_moves:
-            return max(winning_moves, key=lambda m: m[1]['score'])[0],
-    return ()
+@memoize
+def is_corner_cell(cell, board_size):
+    return cell.row_id in (0, board_size - 1) and cell.col_id in (0, board_size - 1)
 
 
 def strategy(board: Board) -> Cell:
-    return select_random_cell(get_moves(board) or get_possible_moves(board))
+    return select_random_cell(get_moves(board))

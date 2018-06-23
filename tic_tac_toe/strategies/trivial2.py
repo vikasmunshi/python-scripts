@@ -5,7 +5,7 @@ from tic_tac_toe import *
 
 @memoize
 def get_move(board):
-    return get_possible_moves(board)[0]
+    return get_free_cells(board)[0]
 
 
 def strategy(board):

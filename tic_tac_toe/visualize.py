@@ -6,28 +6,28 @@ from .types import Board, Cell, Cells, Player, TypeFuncBoard, TypeFuncGame
 from .util import cached, printed
 
 
-@printed
 @cached
-def draw_board(board: Board) -> str:
-    board_str = draw_empty_board(board.size)
-    for marker_position, mark in get_marker_replacements(board.size, board.moves):
-        board_str = board_str[:marker_position] + mark + board_str[marker_position + 1:]
-    board_str = board_str.replace('.', ' ').replace('\n', '\n\t\t')
-    return '\tmove {}: {}\n\t\t{}'.format(len(board.moves), board.moves[-1], board_str)
-
-
-@cached
-def draw_empty_board(size: int) -> str:
+def an_empty_board(size: int) -> str:
     return ('____' * size + '\n|' + ' . |' * size + '\n') * size + '____' * size
 
 
 @cached
-def get_marker_replacements(size: int, moves: Cells) -> ():
-    marker_positions = tuple(i for i, c in enumerate(draw_empty_board(size)) if c == '.')
+def base_marker_positions(size: int, moves: Cells) -> ():
+    marker_positions = tuple(i for i, c in enumerate(an_empty_board(size)) if c == '.')
     return tuple((marker_positions[position_num], mark)
                  for position_num, mark in reversed(tuple((c.col_id + c.row_id * size, ('X', 'O')[i % 2])
                                                           for i, c in enumerate(moves) if isinstance(c, Cell)))
                  if position_num < len(marker_positions))
+
+
+@printed
+@cached
+def draw_board(board: Board) -> str:
+    board_str = an_empty_board(board.size)
+    for marker_position, mark in base_marker_positions(board.size, board.moves):
+        board_str = board_str[:marker_position] + mark + board_str[marker_position + 1:]
+    board_str = board_str.replace('.', ' ').replace('\n', '\n\t\t')
+    return '\tmove {}: {}\n\t\t{}'.format(len(board.moves), board.moves[-1], board_str)
 
 
 @printed
