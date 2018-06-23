@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #   tic_tac_toe/ai.py
-import atexit
 import itertools
-import json
-from os import path
-from shutil import copyfile
 from string import ascii_lowercase
-from typing import Callable, Iterable, Tuple
+from typing import Callable, Tuple
 
 from .core import create_empty_board as create_empty_namedtuple_board, get_cells as get_namedtuple_cells
 from .types import Cell, Cells
@@ -56,12 +52,12 @@ def get_rows(size: int) -> Tuple[str, ...]:
 
 @cached_func
 def get_map_cell_nt_str(size: int) -> dict:
-    return dict(zip(get_namedtuple_cells(create_empty_namedtuple_board(3)), get_all_cells(size)))
+    return dict(zip(get_namedtuple_cells(create_empty_namedtuple_board(size)), get_all_cells(size)))
 
 
 @cached_func
 def get_map_str_cell_nt(size: int) -> dict:
-    return dict(zip(get_all_cells(size), get_namedtuple_cells(create_empty_namedtuple_board(3))))
+    return dict(zip(get_all_cells(size), get_namedtuple_cells(create_empty_namedtuple_board(size))))
 
 
 @cached_func
@@ -76,23 +72,10 @@ def map_str_to_cells_nt(size: int, moves: str) -> Cells:
 
 @cached_func
 def memorize_all_games(size: int) -> list:
-    mem_pickle_file = path.abspath('{}.{}.json'.format(__file__[:-3], size))
-    if path.exists(mem_pickle_file):
-        with open(mem_pickle_file, 'r') as infile:
-            mem_cache = json.load(infile)
-    else:
-        mem_cache = set()
-        for moves, result in yield_all_possible_games(size):
-            mem_cache.add(moves)
-        mem_cache = sorted(mem_cache)
-
-        def mem_dump() -> None:
-            if path.exists(mem_pickle_file):
-                copyfile(mem_pickle_file, mem_pickle_file + '.bak')
-            with open(mem_pickle_file, 'w') as outfile:
-                json.dump(mem_cache, outfile)
-
-        atexit.register(mem_dump)
+    mem_cache = set()
+    for moves, result in (check_board(size, ''.join(p)) for p in itertools.permutations(get_all_cells(size))):
+        mem_cache.add(moves)
+    mem_cache = sorted(mem_cache)
     return mem_cache
 
 
@@ -123,8 +106,3 @@ def suggest_moves(board) -> Cells:
         max_score = max(scores.items(), key=lambda x: x[1]['S'])[1]['S']
         return tuple(map_str_to_cells_nt(board.size, m[0])[0] for m in scores.items() if m[1]['S'] == max_score)
     return ()
-
-
-def yield_all_possible_games(size: int) -> Iterable[Tuple[str, str]]:
-    for p in itertools.permutations(get_all_cells(size)):
-        yield check_board(size, ''.join(p))

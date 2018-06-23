@@ -36,6 +36,8 @@ def load_players(players_folder: str, include_bad: bool = False, ignore_signatur
 def main() -> str:
     parser = ArgumentParser(description='Play Tic Tac Toe Tournament')
 
+    parser.add_argument('-b', dest='board_size', type=int, default=3,
+                        help='board size, default is 3')
     parser.add_argument('-d', dest='strategies_folder', type=str,
                         help='location of player strategy files, default is TIC_TAC_TOE_DIR/strategies')
     parser.add_argument('-g', dest='games', default=1000, type=int,
@@ -50,13 +52,13 @@ def main() -> str:
     args = parser.parse_args()
     strategies_folder = args.strategies_folder or join(dirname(__file__), 'strategies')
     if args.tournament_type == 'fight':
-        winners = play_tournament_eliminate(size=3, num_games=args.games,
+        winners = play_tournament_eliminate(size=args.board_size, num_games=args.games,
                                             players=tuple(load_players(strategies_folder, args.include_bad, args.py2)),
                                             round_num=0)
         return ('Winner is {}\n'.format(winners[0].name) if len(winners) == 1 else
                 'Winners are {}\n'.format(', '.join([player.name for player in winners])))
     else:
-        scores = play_tournament_points(size=3, num_games=args.games,
+        scores = play_tournament_points(size=args.board_size, num_games=args.games,
                                         players=tuple(load_players(strategies_folder, args.include_bad, args.py2)))
         longest_name_length = max([len(score.player) for score in scores])
         l = '{:' + str(longest_name_length + 2) + 's}{:9d} {:9.2%} {:9d} {:9d} {:9d} {:9d}\n'
