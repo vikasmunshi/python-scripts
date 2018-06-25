@@ -34,81 +34,56 @@
 #    SOFTWARE.
 ########################################################################################################################
 
-from base64 import b64decode, b64encode
-from binascii import hexlify, unhexlify
-from bisect import bisect_left
-from io import BytesIO
-from operator import itemgetter
-from random import SystemRandom
-from string import ascii_letters, digits
-from typing import Dict, Sequence, Tuple, Union
+import binascii
+import collections
+import functools
+import random
+import string
+import typing
 
-from Crypto.Cipher import AES, PKCS1_OAEP
-from Crypto.PublicKey import RSA
-from Crypto.Random import get_random_bytes
+Share = collections.namedtuple('Share', 'n m x y')
+rand = random.SystemRandom()
 
 
-def decrypt(msg: str, private_key: Union[str, RSA.RsaKey]) -> str:
-    """decrypt (encrypted) msg using private key"""
-    rsa_key = private_key if isinstance(private_key, RSA.RsaKey) else RSA.import_key(private_key)
-    key_size = rsa_key.size_in_bytes()
-    enc_msg = BytesIO(b64decode(msg.encode()))
-    enc_encryption_key, nonce, tag, cipher_text = [enc_msg.read(size) for size in (key_size, 16, 16, -1)]
-    encryption_key = PKCS1_OAEP.new(rsa_key).decrypt(enc_encryption_key)
-    cipher_aes = AES.new(encryption_key, AES.MODE_EAX, nonce)
-    return cipher_aes.decrypt_and_verify(cipher_text, tag).decode()
+@functools.lru_cache(maxsize=None)
+def mersenne_num(m: int) -> int:
+    return (2 ** m) - 1
 
 
-def encrypt(msg: str, public_key: Union[str, RSA.RsaKey]) -> str:
-    """encrypt msg using public key"""
-    encryption_key = get_random_bytes(32)
-    rsa_key = public_key if isinstance(public_key, RSA.RsaKey) else RSA.import_key(public_key)
-    enc_encryption_key = PKCS1_OAEP.new(rsa_key).encrypt(encryption_key)
-    cipher_aes = AES.new(encryption_key, AES.MODE_EAX)
-    cipher_text, tag = cipher_aes.encrypt_and_digest(msg.encode())
-    return b64encode(enc_encryption_key + cipher_aes.nonce + tag + cipher_text).decode()
-
-
-def decrypt_and_encrypt(enc_msg: str, private_key: Union[str, RSA.RsaKey], public_key: Union[str, RSA.RsaKey]) -> str:
-    """decrypt (encrypted) msg and (re)encrypt using public key"""
-    decryption_private_key = private_key if isinstance(private_key, RSA.RsaKey) else RSA.import_key(private_key)
-    encryption_public_key = public_key if isinstance(public_key, RSA.RsaKey) else RSA.import_key(public_key)
-    return encrypt(msg=decrypt(msg=enc_msg, private_key=decryption_private_key), public_key=encryption_public_key)
-
-
-# pre-calculated list of (mersenne) primes 6972593, 13466917, 20996011, 24036583, 25964951, 30402457, 32582657, 37156667
-primes = [(2 ** e) - 1 for e in (1279, 2203, 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497,
-                                 86243, 110503, 132049, 216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377)]
-
-# random number generator used to generate randint for use as polynomial coefficients
-rand = SystemRandom()
+def get_smallest_prime(x: int) -> int:
+    for p in (mersenne_num(m) for m in (1279, 2203, 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209,
+                                        44497, 86243, 110503, 132049, 216091, 756839, 859433, 1257787, 1398269, 2976221,
+                                        3021377, 6972593, 13466917, 20996011, 24036583, 25964951, 30402457)):
+        if p >= x:
+            return p
+    raise IndexError(x)
 
 
 def str_to_int(str_arg: str) -> int:
     """map string to int"""
-    return int(hexlify(str_arg.encode('utf-8')), 16)
+    return int(binascii.hexlify(str_arg.encode('utf-8')), 16)
 
 
 def int_to_str(int_arg: int) -> str:
     """reverse map int to string"""
-    return unhexlify(format(int_arg, 'x')).decode('utf-8')
-
-
-def egcd(a: int, b: int) -> Tuple[int, int, int]:
-    """Euler's extended algorithm for GCD"""
-    if a == 0:
-        return b, 0, 1
-    else:
-        g, y, x = egcd(b % a, a)
-        return g, x - (b // a) * y, y
+    return binascii.unhexlify(format(int_arg, 'x')).decode('utf-8')
 
 
 def modulo_inverse(x: int, n: int) -> int:
     """multiplicative inverse of x in modulo group n"""
+
+    def egcd(a: int, b: int) -> typing.Tuple[int, int, int]:
+        """Euler's extended algorithm for GCD"""
+        if a == 0:
+            return b, 0, 1
+        else:
+            g, y, x = egcd(b % a, a)
+            return g, x - (b // a) * y, y
+
     return (n + egcd(n, abs(x % n))[2]) % n
 
 
-def polynomial(x: int, coefficients: Sequence[int], n: int) -> int:
+def polynomial(x: int, coefficients: typing.Sequence[int], n: int) -> int:
     """value at x of polynomial with given coefficients in modulo field n"""
     y = 0
     for i, a in enumerate(coefficients):
@@ -118,38 +93,42 @@ def polynomial(x: int, coefficients: Sequence[int], n: int) -> int:
 
 def get_random_str(length: int = 32) -> str:
     """return a random alphanumeric string, default length 32 chars i.e. 256 bits"""
-    return ''.join([rand.choice(ascii_letters + digits) for _ in range(length)])
+    return ''.join([rand.choice(string.ascii_letters + string.digits) for _ in range(length)])
 
 
-class Share(dict):
-    """share is a point on the discreet x,y plane"""
-
-    def __init__(self, x: int, y: int):
-        super().__init__(x=x, y=y)
-
-
-def merge(shares: Sequence[Union[Share, Dict]]) -> str:
+def merge(shares: typing.Sequence[typing.Union[Share, typing.Dict]]) -> typing.Union[str, None]:
     """reconstruct secret from sequence of shares"""
-    modulus = primes[bisect_left(primes, max(shares, key=itemgetter('y'))['y'])]
-    threshold = len(shares)
+    modulus = get_smallest_prime(max([share.y for share in shares]))
+    threshold = shares[0].n
     y_intercept = 0
-    for i in range(threshold):
-        numerator, denominator = 1, 1
-        for j in range(threshold):
-            if i != j:
-                numerator = (numerator * (0 - shares[j]['x'])) % modulus
-                denominator = (denominator * (shares[i]['x'] - shares[j]['x'])) % modulus
-        lagrange_polynomial = numerator * modulo_inverse(denominator, modulus)
-        y_intercept = (modulus + y_intercept + (shares[i]['y'] * lagrange_polynomial)) % modulus
-    return int_to_str(y_intercept)
+    try:
+        for i in range(threshold):
+            numerator, denominator = 1, 1
+            for j in range(threshold):
+                if i != j:
+                    numerator = (numerator * (0 - shares[j].x)) % modulus
+                    denominator = (denominator * (shares[i].x - shares[j].x)) % modulus
+            lagrange_polynomial = numerator * modulo_inverse(denominator, modulus)
+            y_intercept = (modulus + y_intercept + (shares[i].y * lagrange_polynomial)) % modulus
+        return int_to_str(y_intercept)
+    except (IndexError, UnicodeError):
+        return None
 
 
-def split(secret: str, threshold: int, num_shares: int) -> Sequence[Share]:
+def split(secret: str, threshold: int, num_shares: int) -> typing.Sequence[Share]:
     """split secret into shares such that threshold number or more are required to reconstruct"""
     y_intercept = str_to_int(secret)
-    modulus = primes[bisect_left(primes, y_intercept)]  # throws IndexError if secret is too large
+    modulus = get_smallest_prime(y_intercept)
     coefficients = (y_intercept,) + tuple(map(lambda _: rand.randint(1, modulus - 1), range(threshold - 1)))
     x_vals = tuple(set([rand.randint(1, 999999) for _ in range(num_shares)]))
     for _ in range(num_shares - len(x_vals)):
         x_vals += (max(x_vals) + 1,)
-    return tuple(Share(x, polynomial(x, coefficients, modulus)) for x in x_vals)
+    return tuple(Share(threshold, num_shares, x, polynomial(x, coefficients, modulus)) for x in x_vals)
+
+
+if __name__ == '__main__':
+    secret = get_random_str(length=32)
+    shares = split(secret=secret, threshold=3, num_shares=5)
+    result = secret == merge(shares=shares[0:3])
+    print(result)
+    exit(result)
