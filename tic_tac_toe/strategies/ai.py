@@ -9,7 +9,7 @@ from os.path import abspath, exists, splitext
 from tic_tac_toe.core import get_cells, get_free_cells, last_move_has_won
 from tic_tac_toe.memory import recollect, remember
 from tic_tac_toe.types import Board, Cell, Cells, Game
-from tic_tac_toe.util import cached, logged, select_random_cell
+from tic_tac_toe.util import cached, select_random_cell
 
 
 @cached
@@ -42,7 +42,6 @@ def normalize_result(game: Game, player: int) -> int:
 
 
 @cached
-@logged
 def suggest_moves(board) -> Cells:
     memorize_all_games(board.size)
     scores = {}
