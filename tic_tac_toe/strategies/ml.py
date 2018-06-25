@@ -3,7 +3,7 @@
 #   tic_tac_toe/strategies/ml.py
 from operator import itemgetter
 
-from tic_tac_toe.core import get_free_cells, get_lines, get_player_to_move, last_move_has_won
+from tic_tac_toe.core import get_free_cells, get_lines, last_move_has_won
 from tic_tac_toe.types import Board, Cell, Cells, Lines
 from tic_tac_toe.util import cached, select_random_cell
 
@@ -11,14 +11,12 @@ from tic_tac_toe.util import cached, select_random_cell
 @cached
 def cost_function(board: Board, move: Cell) -> int:
     b = Board(board.size, board.moves + (move,))
-    return (
-        1 * count_untouched_lines(get_lines(b), b.moves[1 - get_player_to_move(b)::2])
-        - 1 * count_untouched_lines(get_lines(b), b.moves[get_player_to_move(b)::2])
-    )
+    p = len(b.moves) % 2
+    return 1 * count_free_lines(get_lines(b), b.moves[1 - p::2]) - 1 * count_free_lines(get_lines(b), b.moves[p::2])
 
 
 @cached
-def count_untouched_lines(lines: Lines, moves: Cells) -> int:
+def count_free_lines(lines: Lines, moves: Cells) -> int:
     return len(tuple(l for l in lines if not any(m in l for m in moves)))
 
 
@@ -43,8 +41,4 @@ def get_winning_moves(board) -> Cells:
 
 
 def strategy(board: Board) -> Cell:
-    return select_random_cell(
-            get_winning_moves(board) or
-            get_defensive_moves(board) or
-            get_cost_optimal_moves(board)
-    )
+    return select_random_cell(get_winning_moves(board) or get_defensive_moves(board) or get_cost_optimal_moves(board))

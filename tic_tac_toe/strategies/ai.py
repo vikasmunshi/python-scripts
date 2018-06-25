@@ -44,14 +44,14 @@ def normalize_result(game: Game, player: int) -> int:
 @cached
 def suggest_moves(board) -> Cells:
     memorize_all_games(board.size)
-    scores = {}
     num_moves = len(board.moves)
+    scores = {}
     for next_move, winner in ((g.moves[num_moves], g.result) for g in recollect(board.moves)):
         if next_move not in scores: scores[next_move] = {'W': 0, 'L': 0, 'D': 0}
         bucket = 'D' if winner == 'D' else 'W' if winner == ('X', 'O')[num_moves % 2] else 'L'
-        nm = scores[next_move]
-        nm[bucket] += 1
-        nm['S'] = int(1000 * (nm['W'] + nm['D'] * (num_moves % 2) - nm['L']) / (nm['W'] + nm['D'] + nm['L']))
+        m = scores[next_move]
+        m[bucket] += 1
+        m['S'] = int(1000 * (m['W'] + m['D'] * (num_moves % 2) - m['L']) / (m['W'] + m['D'] + m['L']))
     if scores:
         max_score = max(scores.items(), key=lambda x: x[1]['S'])[1]['S']
         return tuple(m[0] for m in scores.items() if m[1]['S'] == max_score)

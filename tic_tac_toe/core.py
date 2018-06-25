@@ -56,12 +56,7 @@ def get_lines(board: Board) -> Lines:
 
 @cached
 def get_moves_of_last_player(board: Board) -> Cells:
-    return board.moves[1 - get_player_to_move(board)::2]
-
-
-@cached
-def get_player_to_move(board: Board) -> int:
-    return len(board.moves) % 2
+    return board.moves[1 - len(board.moves) % 2::2]
 
 
 @cached
