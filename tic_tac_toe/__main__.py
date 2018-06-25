@@ -26,8 +26,8 @@ def load_players(players_folder: str, include_bad: bool = False, ignore_signatur
             player_strategy_module = importlib.util.module_from_spec(player_strategy_spec)
             player_strategy_spec.loader.exec_module(player_strategy_module)
             player_strategy = getattr(player_strategy_module, 'strategy')
-            assert inspect.isfunction(player_strategy), 'strategy is {} and not function'.format(
-                    type(player_strategy).__name__)
+            assert inspect.isfunction(player_strategy), \
+                'strategy is {} and not function'.format(type(player_strategy).__name__)
             assert ignore_signature or inspect.signature(player_strategy) == expected_signature, \
                 'signature is not strategy{}'.format(expected_signature)
             yield Player(player_name, player_strategy)
@@ -54,20 +54,30 @@ def main() -> str:
     args = parser.parse_args()
     strategies_folder = args.strategies_folder or path.join(path.dirname(__file__), 'strategies')
     if args.tournament_type == 'fight':
-        winners = play_tournament_eliminate(size=args.board_size, num_games=args.games,
-                                            players=tuple(load_players(strategies_folder, args.include_bad, args.py2)),
-                                            round_num=0)
-        return ('Winner is {}\n'.format(winners[0].name) if len(winners) == 1 else
-                'Winners are {}\n'.format(', '.join([player.name for player in winners])))
+        winners = play_tournament_eliminate(
+                size=args.board_size,
+                num_games=args.games,
+                players=tuple(load_players(strategies_folder, args.include_bad, args.py2)),
+                round_num=0
+        )
+        return (
+            'Winner is {}\n'.format(winners[0].name) if len(winners) == 1 else
+            'Winners are {}\n'.format(', '.join([player.name for player in winners]))
+        )
     else:
-        scores = play_tournament_points(size=args.board_size, num_games=args.games,
-                                        players=tuple(load_players(strategies_folder, args.include_bad, args.py2)))
+        scores = play_tournament_points(
+                size=args.board_size,
+                num_games=args.games,
+                players=tuple(load_players(strategies_folder, args.include_bad, args.py2))
+        )
         longest_name_length = max([len(score.player) for score in scores])
         l = '{:' + str(longest_name_length + 2) + 's}{:9d} {:9.2%} {:9d} {:9d} {:9d} {:9d}\n'
         h = '{:' + str(longest_name_length + 2) + 's}{}\n'
-        return (h.format('Player', '   Points   Wins(%)    Losses     Draws     Games Penalties') +
-                ''.join([l.format(s.player, s.points, s.wins / (s.games or 1), s.losses, s.draws, s.games, s.penalties)
-                         for s in scores]))
+        return (
+            h.format('Player', '   Points   Wins(%)    Losses     Draws     Games Penalties') +
+            ''.join([l.format(s.player, s.points, s.wins / (s.games or 1), s.losses, s.draws, s.games, s.penalties)
+                     for s in scores])
+        )
 
 
 if __name__ == '__main__':
