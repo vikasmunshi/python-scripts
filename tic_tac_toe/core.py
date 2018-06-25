@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #   tic_tac_toe/core.py
+from .memory import remembered
 from .types import Board, Cell, Cells, Lines, Player
 from .util import cached, select_random_cell
 from .visualize import show_board, show_game
@@ -21,6 +22,7 @@ def create_empty_board(size: int) -> Board:
     return Board(size, ())
 
 
+@remembered
 @show_board
 @cached
 def check_winner(board: Board) -> str:
@@ -54,7 +56,12 @@ def get_lines(board: Board) -> Lines:
 
 @cached
 def get_moves_of_last_player(board: Board) -> Cells:
-    return board.moves[1 - len(board.moves) % 2::2]
+    return board.moves[1 - get_player_to_move(board)::2]
+
+
+@cached
+def get_player_to_move(board: Board) -> int:
+    return len(board.moves) % 2
 
 
 @cached

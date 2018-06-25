@@ -7,11 +7,12 @@ from typing import Callable, Generator, Tuple, Union
 
 Board = namedtuple('Board', ('size', 'moves'))
 Cell = namedtuple('Cell', ('row_id', 'col_id'))
-Cell.__repr__ = lambda self: tuple.__repr__(self)
 Cells = Tuple[Cell, ...]
+Game = namedtuple('Game', ['moves', 'result'])
+Games = Tuple[Game, ...]
 Lines = Tuple[Cells, ...]
+Moves = Cells
 Player = namedtuple('Player', ('name', 'strategy'))
-Player.__repr__ = lambda self: self.name
 Players = Tuple[Player, ...]
 Score = namedtuple('Score', ('player', 'points', 'wins', 'draws', 'losses', 'games', 'penalties'))
 Scores = Tuple[Score, ...]

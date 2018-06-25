@@ -1,32 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #   tic_tac_toe/__main__.py
-from argparse import ArgumentParser
+import argparse
+import importlib.util
+import inspect
 from glob import iglob
-from importlib.util import module_from_spec, spec_from_file_location
-from inspect import isfunction, signature
-from os import environ
-from os.path import basename, dirname, join, splitext
+from os import environ, path
 from time import time
 
-from . import Player, Players, play_tournament_eliminate, play_tournament_points, strategy
+from .core import strategy
+from .tournament import play_tournament_eliminate, play_tournament_points
+from .types import Player, Players
 
 environ['COLUMNS'] = '120'
 
 
 def load_players(players_folder: str, include_bad: bool = False, ignore_signature: bool = False) -> Players:
-    expected_signature = signature(strategy)
-    for player_file in iglob(join(players_folder, '[!_]*.py')):
-        player_name = splitext(basename(player_file))[0]
+    expected_signature = inspect.signature(strategy)
+    for player_file in iglob(path.join(players_folder, '[!_]*.py')):
+        player_name = path.splitext(path.basename(player_file))[0]
         try:
             if not include_bad and player_name.startswith('bad'):
                 continue
-            player_strategy_spec = spec_from_file_location(player_name, player_file)
-            player_strategy_module = module_from_spec(player_strategy_spec)
+            player_strategy_spec = importlib.util.spec_from_file_location(player_name, player_file)
+            player_strategy_module = importlib.util.module_from_spec(player_strategy_spec)
             player_strategy_spec.loader.exec_module(player_strategy_module)
             player_strategy = getattr(player_strategy_module, 'strategy')
-            assert isfunction(player_strategy), 'strategy is {} and not function'.format(type(player_strategy).__name__)
-            assert ignore_signature or signature(player_strategy) == expected_signature, \
+            assert inspect.isfunction(player_strategy), 'strategy is {} and not function'.format(
+                    type(player_strategy).__name__)
+            assert ignore_signature or inspect.signature(player_strategy) == expected_signature, \
                 'signature is not strategy{}'.format(expected_signature)
             yield Player(player_name, player_strategy)
         except (AssertionError, AttributeError, ImportError, SyntaxError, TypeError) as e:
@@ -34,7 +36,7 @@ def load_players(players_folder: str, include_bad: bool = False, ignore_signatur
 
 
 def main() -> str:
-    parser = ArgumentParser(description='Play Tic Tac Toe Tournament')
+    parser = argparse.ArgumentParser(description='Play Tic Tac Toe Tournament')
 
     parser.add_argument('-b', dest='board_size', type=int, default=3,
                         help='board size, default is 3')
@@ -50,7 +52,7 @@ def main() -> str:
                         help='also load python 2 strategy files')
 
     args = parser.parse_args()
-    strategies_folder = args.strategies_folder or join(dirname(__file__), 'strategies')
+    strategies_folder = args.strategies_folder or path.join(path.dirname(__file__), 'strategies')
     if args.tournament_type == 'fight':
         winners = play_tournament_eliminate(size=args.board_size, num_games=args.games,
                                             players=tuple(load_players(strategies_folder, args.include_bad, args.py2)),

@@ -36,7 +36,7 @@ def new_board(one: Player, two: Player) -> str:
 
 
 @printed
-def result(r: str) -> str:
+def show_result(r: str) -> str:
     return 'Score {}\n'.format(r if r != 'D' else 'draw')
 
 
@@ -52,7 +52,7 @@ def show_game(func: TypeFuncGame) -> TypeFuncGame:
     def f(size: int, one: Player, two: Player) -> str:
         new_board(one, two)
         r = func(size, one, two)
-        result(r)
+        show_result(r)
         return r
 
     return f
