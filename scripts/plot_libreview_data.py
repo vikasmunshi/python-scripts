@@ -14,13 +14,13 @@ import pandas as pd
 def read_file(filename: str = None) -> pd.DataFrame:
     if filename is None:
         import tkinter as tk
-        from tkinter import filedialog
+        from tkinter import filedialog as fd
         window = tk.Tk()
         window.withdraw()
-        filename = filedialog.askopenfilename(parent=window, filetypes=[('csv', '*.csv')], title='Choose Libre file')
+        filename = fd.askopenfilename(parent=window, filetypes=[('csv', '*.csv')], title='Choose Libre file')
         window.destroy()
     with open(filename, 'r') as raw:
-        data = pd.read_csv(raw, header=1, converters={2: lambda x: dt.strptime(x, '%m-%d-%Y %I:%M %p')}, index_col=2)
+        data = pd.read_csv(raw, header=1, converters={2: lambda x: dt.strptime(x, '%d-%m-%Y %H:%M')}, index_col=2)
     data = data[['Record Type', 'Historic Glucose mmol/L', 'Scan Glucose mmol/L']]
     data.columns = ('type', 'historic', 'scan')
     data['glucose'] = data.historic.where(data.type == 0, data.scan)
@@ -28,54 +28,87 @@ def read_file(filename: str = None) -> pd.DataFrame:
 
 
 def calculate_stats(data: pd.DataFrame) -> pd.DataFrame:
-    data['min'] = data.groupby(data.index.week)['glucose'].transform(min)
-    data['max'] = data.groupby(data.index.week)['glucose'].transform(max)
-    data['mean'] = data.groupby(data.index.week)['glucose'].transform(stats.mean)
-    data['variance'] = data.groupby(data.index.week)['glucose'].transform(stats.pvariance)
+    data['min'] = data.groupby(data.index.date)['glucose'].transform(min)
+    data['max'] = data.groupby(data.index.date)['glucose'].transform(max)
+    data['average'] = data.groupby(data.index.date)['glucose'].transform(stats.mean)
+    data['stdev'] = data.groupby(data.index.date)['glucose'].transform(stats.pstdev)
+    data['range'] = data.groupby(data.index.date)['glucose'].transform(lambda x: max(x) - min(x))
     return data
 
 
 def plot_data(data: pd.DataFrame) -> None:
-    import matplotlib.dates
+    import matplotlib.dates as md
     import matplotlib.pyplot as plt
-    ax = data.plot(
-        figsize=(12, 6),
-        color=(
-            'xkcd:bright blue',  # glucose
-            'xkcd:navy blue',  # min
-            'xkcd:navy blue',  # max
-            'xkcd:navy blue',  # mean
-            'xkcd:grey',  # variance
-        )
+    # noinspection PyTypeChecker
+    _, sub_plots = plt.subplots(
+        nrows=2,
+        ncols=1,
+        sharex=True,
+        gridspec_kw={
+            'height_ratios': [3, 1],
+            'left': 0.04,
+            'right': 0.96,
+            'bottom': 0.06,
+            'top': 0.99,
+            'wspace': 0,
+            'hspace': 0,
+        }
     )
-    ax.xaxis.set_major_locator(matplotlib.dates.DayLocator())  # set x axis major grid to date
-    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%d %b'))  # set x axis label format
-    ax.xaxis.set_minor_locator(matplotlib.dates.HourLocator())  # set x axis minor grid to hour
+
+    charts = (
+        data[['glucose', 'min', 'max', 'average']].plot(
+            color=('xkcd:sky blue', 'xkcd:dark blue', 'xkcd:dark blue', 'xkcd:dark grey',),
+            ax=sub_plots[0]),
+        data[['stdev', 'range']].plot(color=('xkcd:grey', 'xkcd:dark grey',), ax=sub_plots[1])
+    )
+
     min_date, max_date = data.index.min().date(), data.index.max().date() + td(days=1)  # min and max date range
-    min_date = max(min_date, max_date - td(days=35))  # adjust min range to show to include max 5 weeks
+    min_date = max(min_date, max_date - td(days=182))  # adjust min range to show to include max 26 weeks
     min_date += td(days=(0, 6, 5, 4, 3, 2, 1)[min_date.weekday()])  # align min date to a week start (monday)
-    ax.set_xlim(left=min_date, right=max_date)  # set x axis min and max range to show
-    plt.yticks(range(0, data.glucose.max().astype(int) + 1, 1))  # set y axis min, max, and ticks
-    ax.set(ylabel='mmol/L', xlabel='date', facecolor='xkcd:off white')  # set axis labels and background color
-    ax.axhspan(ymin=4, ymax=8, color='xkcd:light green')  # highlight target glucose range
-    ax.format_xdata = matplotlib.dates.DateFormatter('%d-%m-%Y %H:%M ')  # set format for x value
-    ax.format_ydata = lambda x: '%1.2f' % x  # set format for y value
-    ax.grid(True)  # show gridlines
-    ax.margins(x=0, y=0.05)  # adjust figure margins
-    plt.legend(ncol=data.shape[1])  # format legend to display in one row
-    plt.subplots_adjust(left=0.05, right=0.95, bottom=0.09, top=1, wspace=0, hspace=0)  # adjust plot margins
-    plt.get_current_fig_manager().set_window_title('Glucose')  # set title
-    plt.show()
+    charts[0].xaxis.set_major_locator(md.DayLocator())  # set x axis major grid to date
+    charts[0].xaxis.set_major_formatter(md.DateFormatter('%b-%d'))  # set x axis label format
+    charts[0].set_xlim(left=min_date, right=max_date)  # set x axis min and max range to show
+
+    for ax in charts:
+        ax.set(facecolor='xkcd:off white')  # set background color
+        ax.format_xdata = md.DateFormatter('%a %d-%m-%Y %H:%M ')  # set format for x value
+        ax.format_ydata = lambda x: '%1.2f' % x  # set format for y value
+        ax.grid(b=True)  # show grid-lines
+        ax.margins(x=0, y=0.05)  # adjust figure margins
+
+    charts[0].set_yticks(range(0, data.glucose.max().astype(int) + 1, 2))  # set y axis min, max, and ticks
+    charts[0].axhspan(ymin=4.0, ymax=6.8, color='xkcd:lime green')  # highlight target glucose range
+    charts[0].axhspan(ymin=3.9, ymax=4.0, color='xkcd:red')  # highlight low glucose range
+    charts[0].set(xlabel='', ylabel='mmol/L')  # set axis label
+    charts[0].tick_params(axis='y', colors='xkcd:navy blue', labelright=True)  # set y tick params
+    for text in charts[0].legend(ncol=69, shadow=True).get_texts():  # set legend to show in one row
+        text.set_color('xkcd:navy blue')  # set legend font color
+
+    charts[1].set_yticks(range(0, data.range.max().astype(int) + 1, 4))
+    charts[1].set(xlabel='', ylabel='mmol/L')  # set axis label
+    charts[1].yaxis.label.set_color('xkcd:dark red')  # set label color
+    charts[1].tick_params(axis='y', colors='xkcd:dark red', labelright=True)  # set y tick params
+    for text in charts[1].legend(ncol=69, shadow=True).get_texts():  # set legend to show in one row
+        text.set_color('xkcd:dark red')  # set legend font color
+    for label in charts[1].xaxis.get_ticklabels()[1::2]:
+        label.set_visible(False)  # hide every other date label
+
+    fig = plt.get_current_fig_manager()
+    fig.set_window_title('Glucose')  # set title
+    if hasattr(fig, 'window'):
+        fig.window.showMaximized()
+    else:
+        plt.show()
 
 
 if __name__ == '__main__':
     from sys import argv
 
-try:
-    plot_data(calculate_stats(read_file(argv[1] if len(argv) > 1 else None)))
-except Exception as e:
-    import traceback
+    try:
+        plot_data(calculate_stats(read_file(argv[1] if len(argv) > 1 else None)))
+    except Exception as e:
+        import traceback
 
-    print('Traceback (trace limit 2):')
-    traceback.print_tb(e.__traceback__, limit=2)
-    print('Exception {} occurred at line {}\n{}'.format(type(e).__name__, e.__traceback__.tb_next.tb_lineno, e))
+        print('Traceback (trace limit 2):')
+        traceback.print_tb(e.__traceback__, limit=2)
+        print('Exception {} occurred at line {}\n{}'.format(type(e).__name__, e.__traceback__.tb_next.tb_lineno, e))

@@ -15,7 +15,15 @@ setup(
         packages=['crypt'],
         package_dir={'crypt': 'src/crypt'},
         package_data={'crypt': 'inventory/*.json'},
-        install_requires=['pycryptodome>=3.6.1', 'ifaddr>=0.1.4'],
+        install_requires=[
+                'pycryptodome>=3.6.1',
+                'ifaddr>=0.1.4',
+                'matplotlib>=3.0.3',
+                'numpy>=1.16.3',
+                'pandas>=0.24.2',
+                'statsmodels>=0.9.0',
+                'scipy>=1.3.0',
+        ],
         license='MIT License',
         platforms=['any'],
         long_description=open('README.md').read()
