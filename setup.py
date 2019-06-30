@@ -19,6 +19,8 @@ setup(
                 'pycryptodome>=3.6.1',
                 'ifaddr>=0.1.4',
                 'matplotlib>=3.0.3',
+                'mplcursors>=0.2.1',
+                'seaborn>=0.9.0',
                 'numpy>=1.16.3',
                 'pandas>=0.24.2',
                 'statsmodels>=0.9.0',
