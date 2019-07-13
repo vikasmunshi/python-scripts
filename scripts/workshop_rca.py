@@ -14,7 +14,7 @@ default_user = 'neo4j'
 default_pwd = 'YVSJuTtaKlhLZmqT'
 
 
-def getfilename():
+def getfilename() -> str:
     import tkinter as tk
     from tkinter import filedialog as fd
     window = tk.Tk()
