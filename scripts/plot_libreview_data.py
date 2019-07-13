@@ -68,13 +68,9 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
                                                                'left': 0.04, 'right': 0.96, 'bottom': 0.09, 'top': 0.99,
                                                                'wspace': 0, 'hspace': 0.05, })[1], charts)):
         ax.set(facecolor='xkcd:off white')  # set background color
-        # noinspection SpellCheckingInspection
-        ax.format_xdata = md.DateFormatter('%a %d-%m-%Y %H:%M ')  # set format for x value
-        # noinspection SpellCheckingInspection
-        ax.format_ydata = lambda x: '%1.2f' % x  # set format for y value
         ax.grid(b=True)  # show grid-lines
         ax.margins(x=0, y=0.05)  # adjust figure margins
-        ax.tick_params(axis='x', rotation=90)  # set x tick params
+        ax.tick_params(axis='x', rotation=90, bottom=True, top=False, direction='out')  # set x tick params
         ax.xaxis.set_major_locator(md.DayLocator())  # set x axis major grid to date
         ax.xaxis.set_major_formatter(md.DateFormatter('%b-%d'))  # set x axis label format
         ax.set_xlim(left=min_date, right=latest_date)  # set x axis min and max range to show
@@ -84,7 +80,7 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
         ax.set_yticks(range(0, y_max, 4))  # y axis min, max, and ticks
         ax.set_ylim(bottom=y_min, top=y_max)  # set y axis min and max range to show
         ax.set(xlabel='', ylabel='mmol/L')  # set axis label
-        ax.tick_params(axis='y', colors='xkcd:navy blue', labelright=True)  # set y tick params
+        ax.tick_params(axis='y', labelright=True, right=True, left=True, direction='out')  # set y tick params
         ax.legend(ncol=len(legend), framealpha=0.5, loc='upper right')  # legend format
         for i, label in enumerate(ax.xaxis.get_ticklabels()):
             label.set_horizontalalignment('left')  # align label left of tick
