@@ -24,6 +24,7 @@ def getfilename() -> str:
     return filename
 
 
+# noinspection PyPep8
 def read_transform_dump(filename: str = '', worksheet_name: str = '',
                         id_field: str = '', description_field: str = '', caused_by_field: str = '',
                         uri: str = default_uri, user: str = default_user, password: str = default_pwd,
@@ -32,13 +33,12 @@ def read_transform_dump(filename: str = '', worksheet_name: str = '',
     with pd.ExcelFile(filename or getfilename()) as workbook:
         data, filename = workbook.parse(worksheet_name or workbook.sheet_names[-1]), workbook.io
 
-    # filter unused columns, simplify names, drop rows with no value & transform caused_by column into list
+    # filter unused columns, simplify names, & transform caused_by column into list
     data = data[[id_field or data.columns[0], description_field or data.columns[1], caused_by_field or data.columns[2]]]
     data.columns = ('id', 'description', 'caused_by')
-    data = data.dropna(axis=0, subset=['caused_by'])
-    # split values in caused_by column on newline and comma, remove RC
-    data.caused_by = data.caused_by.apply(lambda x: tuple(
-        c for c in (i.strip() for s in (r.strip().split(',') for r in x.splitlines()) for i in s) if c and c != 'RC'))
+    # split values in caused_by column on newline and comma
+    splitter = lambda x: tuple(i.strip() for s in (l.strip().split(',') for l in x.splitlines()) for i in s)
+    data.caused_by = data.caused_by.fillna('').apply(splitter)
 
     # connect to Neo4j instance
     with GraphDatabase.driver(uri, auth=basic_auth(user, password)) as driver:
@@ -53,7 +53,6 @@ def read_transform_dump(filename: str = '', worksheet_name: str = '',
 
         # add nodes
         add_nodes = 'MERGE (i:%s:Issues {label:$label}) SET i.description = $description'
-        # noinspection PyPep8
         classify = lambda r: 'Issue' if r.id.endswith('.00') else 'UnderlyingCause' if r.caused_by else 'RootCause'
         data.apply(lambda r: graph_transaction(add_nodes % classify(r), label=r.id, description=r.description), axis=1)
 
