@@ -6,7 +6,7 @@
     note: calling tk.Tk() after importing pyplot from matplotlib causes NSInvalidArgumentException
 """
 from datetime import datetime as dt, timedelta as td
-from statistics import mean as average, pstdev as stddev
+from statistics import mean, pstdev
 
 import pandas as pd
 from matplotlib import dates as md
@@ -45,28 +45,29 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
     all_days = tuple(pd.date_range(start=earliest_date, end=latest_date, freq='1D'))
     weekends = tuple(d for d in all_days if d.isoweekday() in (6, 7))
 
-    daily_data = data.groupby(data.index.date)['glucose']
+    daily_data = data['glucose'].groupby(data.index.date)
     data['daily max'] = daily_data.transform(max)
-    data['daily average'] = daily_data.transform(average)
+    data['daily average'] = daily_data.transform(mean)
     data['daily min'] = daily_data.transform(min)
-    data['daily range'] = daily_data.transform(lambda x: max(x) - min(x))
-    data['daily stddev'] = daily_data.transform(stddev)
+    data['daily range'] = data['daily max'] - data['daily min']
+    data['daily stddev'] = daily_data.transform(pstdev)
+    minute_data = data['glucose'].resample('5T').transform(lambda v: v.between(3.9, 6.8, inclusive=True))
+    daily_minute_data = minute_data.groupby(data.index.date)
+    data['% in target'] = (daily_minute_data.transform(sum) / daily_minute_data.transform(len)) * 100
     for rolling_window in ('24h', '7d', '28d', '91d'):
         data['%s rolling average' % rolling_window] = data.glucose.rolling(rolling_window).mean()
 
-    columns = tuple(data.columns)
-    charts = ([c for c in columns if not c.startswith('daily')],)
-    charts += ([c for c in columns if c not in charts[0] and all(not c.endswith(x) for x in ('stddev', 'range'))],)
-    charts += ([c for c in columns if c not in charts[0] + charts[1]],)
-
     # need to import late to avoid exception due to conflict with tkinter
     from matplotlib import pyplot as plt
+    charts = (['daily max', 'daily average', 'daily min'], ['% in target'], ['daily range', 'daily stddev'])
+    charts = ([c for c in data.columns if c not in (i for s in charts for i in s)],) + charts
+
     # noinspection PyTypeChecker,SpellCheckingInspection
-    for ax in (data[chart].plot(ax=fig)
-               for fig, chart in zip(plt.subplots(nrows=len(charts), ncols=1, sharex=True,
-                                                  gridspec_kw={'height_ratios': (4,) + (1,) * (len(charts) - 1),
-                                                               'left': 0.04, 'right': 0.96, 'bottom': 0.09, 'top': 0.99,
-                                                               'wspace': 0, 'hspace': 0.05, })[1], charts)):
+    _, figures = plt.subplots(nrows=len(charts), ncols=1, sharex=True,
+                              gridspec_kw={'height_ratios': (3,) + (1,) * (len(charts) - 1),
+                                           'left': 0.04, 'right': 0.96, 'bottom': 0.09, 'top': 0.99,
+                                           'wspace': 0, 'hspace': 0.05, })
+    for n, ax in enumerate([data[chart].plot(ax=fig) for fig, chart in zip(figures, charts)]):
         ax.set(facecolor='xkcd:off white')  # set background color
         ax.grid(b=True)  # show grid-lines
         ax.margins(x=0, y=0.05)  # adjust figure margins
@@ -75,19 +76,18 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
         ax.xaxis.set_major_formatter(md.DateFormatter('%b-%d'))  # set x axis label format
         ax.set_xlim(left=min_date, right=latest_date)  # set x axis min and max range to show
         _, legend = ax.get_legend_handles_labels()
-        y_min = min(data.loc[min_date:latest_date][legend].min().min().astype(int), 2)
-        y_max = data.loc[min_date:latest_date][legend].max().max().astype(int) + 2
-        ax.set_yticks(range(0, y_max, 4))  # y axis min, max, and ticks
+        y_min = (min(data.loc[min_date:latest_date][legend].min().min().astype(int), 2)) if n != 2 else 0
+        y_max = (data.loc[min_date:latest_date][legend].max().max().astype(int) + 2) if n != 2 else 100
+        ax.set_yticks(range(0, y_max, int((y_max - y_min) / (10 if n == 0 else 4))))  # y axis min, max, and ticks
         ax.set_ylim(bottom=y_min, top=y_max)  # set y axis min and max range to show
-        ax.set(xlabel='', ylabel='mmol/L')  # set axis label
+        ax.set(xlabel='', ylabel='mmol/mol' if n != 2 else '')  # set axis label
         ax.tick_params(axis='y', labelright=True, right=True, left=True, direction='out')  # set y tick params
         ax.legend(ncol=len(legend), framealpha=0.5, loc='upper right')  # legend format
         for i, label in enumerate(ax.xaxis.get_ticklabels()):
             label.set_horizontalalignment('left')  # align label left of tick
         for w in weekends:
             ax.axvspan(w, w + td(days=1), color='xkcd:light tan')  # vertical band for weekends
-        legend_str = ' '.join(legend)
-        if all(s not in legend_str for s in ('range', 'stddev')):
+        if n in (0, 1):
             ax.axhspan(ymin=3.9, ymax=6.8, color='xkcd:lime green')  # highlight target glucose range
             ax.axhspan(ymin=0, ymax=3.9, color='xkcd:light orange')  # highlight low glucose range
         for d in all_days:
@@ -98,17 +98,17 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
                 ax.axvspan(hour + td(minutes=1), hour + td(minutes=1), color='xkcd:off white')
                 ax.axvspan(hour, hour, color=color)
 
-        def format_coord(chart_legend):
+        def format_coord(chart_legend, chart_num):
             def status_str(x, _):
                 loc = data.index.searchsorted(md.DateFormatter('%Y-%m-%d %H:%M:%S')(x), side='right')
                 loc -= 1 if loc > 0 else 0
                 val = data.iloc[loc][chart_legend]
-                return (val.name.strftime('%a %Y-%m-%d %H:%M:%S' if chart_legend == 0 else '%a %Y-%m-%d')
-                        + ''.join([' %s:%1.2f' % (c, v) for c, v in val.to_dict().items()]))
+                return (val.name.strftime('%a %Y-%m-%d %H:%M:%S ' if chart_num == 0 else '%a %Y-%m-%d ')
+                        + ', '.join(['%s: %1.2f' % (c, v) for c, v in val.to_dict().items()]))
 
             return status_str
 
-        ax.format_coord = format_coord(legend)
+        ax.format_coord = format_coord(legend, n)
 
     plt.get_current_fig_manager().set_window_title('glucose')  # set title
     plt.show()
