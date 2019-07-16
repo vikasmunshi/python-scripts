@@ -54,7 +54,7 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
     minute_data = data['glucose'].resample('5T').transform(lambda v: v.between(3.9, 6.8, inclusive=True))
     daily_minute_data = minute_data.groupby(data.index.date)
     data['% in target'] = (daily_minute_data.transform(sum) / daily_minute_data.transform(len)) * 100
-    for rolling_window in ('24h', '7d', '28d', '91d'):
+    for rolling_window in ('24h', '7d', '91d'):
         data['%s rolling average' % rolling_window] = data.glucose.rolling(rolling_window).mean()
 
     # need to import late to avoid exception due to conflict with tkinter
@@ -80,7 +80,7 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
         y_max = (data.loc[min_date:latest_date][legend].max().max().astype(int) + 2) if n != 1 else 100
         ax.set_yticks(range(0, y_max, int((y_max - y_min) / (10 if n == 0 else 4))))  # y axis min, max, and ticks
         ax.set_ylim(bottom=y_min, top=y_max)  # set y axis min and max range to show
-        ax.set(xlabel='', ylabel='mmol/mol' if n != 1 else '')  # set axis label
+        ax.set(xlabel='', ylabel='mmol/L' if n != 1 else '%')  # set axis label
         ax.tick_params(axis='y', labelright=True, right=True, left=True, direction='out')  # set y tick params
         ax.legend(ncol=len(legend), framealpha=0.5, loc='upper right')  # legend format
         for i, label in enumerate(ax.xaxis.get_ticklabels()):
@@ -90,13 +90,16 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
         if n in (0, 2):
             ax.axhspan(ymin=3.9, ymax=6.8, color='xkcd:lime green')  # highlight target glucose range
             ax.axhspan(ymin=0, ymax=3.9, color='xkcd:light orange')  # highlight low glucose range
-        for d in all_days:
-            # vertical line every six hours highlighted by white on both sides
-            for hour, color in ((d, 'xkcd:grey'), (d + td(hours=6), 'xkcd:saffron'),
-                                (d + td(hours=12), 'xkcd:sky blue'), (d + td(hours=18), 'xkcd:orange')):
-                ax.axvspan(hour - td(minutes=1), hour - td(minutes=1), color='xkcd:off white')
-                ax.axvspan(hour + td(minutes=1), hour + td(minutes=1), color='xkcd:off white')
-                ax.axvspan(hour, hour, color=color)
+        if n == 1:
+            ax.axhspan(ymin=90.0, ymax=100.0, color='xkcd:lime green')  # highlight > 90% in target range
+        if n == 0:
+            for d in all_days:
+                # vertical line every six hours highlighted by white on both sides
+                for hour, color in ((d, 'xkcd:grey'), (d + td(hours=6), 'xkcd:saffron'),
+                                    (d + td(hours=12), 'xkcd:sky blue'), (d + td(hours=18), 'xkcd:orange')):
+                    ax.axvspan(hour - td(minutes=1), hour - td(minutes=1), color='xkcd:off white')
+                    ax.axvspan(hour + td(minutes=1), hour + td(minutes=1), color='xkcd:off white')
+                    ax.axvspan(hour, hour, color=color)
 
         def format_coord(chart_legend, chart_num):
             def status_str(x, _):
