@@ -103,7 +103,7 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
                 loc = data.index.searchsorted(md.DateFormatter('%Y-%m-%d %H:%M:%S')(x), side='right')
                 loc -= 1 if loc > 0 else 0
                 val = data.iloc[loc][chart_legend]
-                return (val.name.strftime('%a %Y-%m-%d %H:%M:%S ' if chart_num == 0 else '%a %Y-%m-%d ')
+                return (val.name.strftime('%a %Y-%m-%d %H:%M ' if chart_num == 0 else '%a %Y-%m-%d ')
                         + ', '.join(['%s: %1.2f' % (c, v) for c, v in val.to_dict().items()]))
 
             return status_str
