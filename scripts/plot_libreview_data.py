@@ -59,7 +59,7 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
 
     # need to import late to avoid exception due to conflict with tkinter
     from matplotlib import pyplot as plt
-    charts = (['daily max', 'daily average', 'daily min'], ['% in target'], ['daily range', 'daily stddev'])
+    charts = (['% in target'], ['daily max', 'daily average', 'daily min'], ['daily range', 'daily stddev'])
     charts = ([c for c in data.columns if c not in (i for s in charts for i in s)],) + charts
 
     # noinspection PyTypeChecker,SpellCheckingInspection
@@ -76,18 +76,18 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
         ax.xaxis.set_major_formatter(md.DateFormatter('%b-%d'))  # set x axis label format
         ax.set_xlim(left=min_date, right=latest_date)  # set x axis min and max range to show
         _, legend = ax.get_legend_handles_labels()
-        y_min = (min(data.loc[min_date:latest_date][legend].min().min().astype(int), 2)) if n != 2 else 0
-        y_max = (data.loc[min_date:latest_date][legend].max().max().astype(int) + 2) if n != 2 else 100
+        y_min = (min(data.loc[min_date:latest_date][legend].min().min().astype(int), 2)) if n != 1 else 0
+        y_max = (data.loc[min_date:latest_date][legend].max().max().astype(int) + 2) if n != 1 else 100
         ax.set_yticks(range(0, y_max, int((y_max - y_min) / (10 if n == 0 else 4))))  # y axis min, max, and ticks
         ax.set_ylim(bottom=y_min, top=y_max)  # set y axis min and max range to show
-        ax.set(xlabel='', ylabel='mmol/mol' if n != 2 else '')  # set axis label
+        ax.set(xlabel='', ylabel='mmol/mol' if n != 1 else '')  # set axis label
         ax.tick_params(axis='y', labelright=True, right=True, left=True, direction='out')  # set y tick params
         ax.legend(ncol=len(legend), framealpha=0.5, loc='upper right')  # legend format
         for i, label in enumerate(ax.xaxis.get_ticklabels()):
             label.set_horizontalalignment('left')  # align label left of tick
         for w in weekends:
             ax.axvspan(w, w + td(days=1), color='xkcd:light tan')  # vertical band for weekends
-        if n in (0, 1):
+        if n in (0, 2):
             ax.axhspan(ymin=3.9, ymax=6.8, color='xkcd:lime green')  # highlight target glucose range
             ax.axhspan(ymin=0, ymax=3.9, color='xkcd:light orange')  # highlight low glucose range
         for d in all_days:
