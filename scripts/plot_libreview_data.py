@@ -64,7 +64,7 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
 
     # noinspection PyTypeChecker,SpellCheckingInspection
     _, figures = plt.subplots(nrows=len(charts), ncols=1, sharex=True,
-                              gridspec_kw={'height_ratios': (3,) + (1,) * (len(charts) - 1),
+                              gridspec_kw={'height_ratios': (len(charts) - 1,) + (1,) * (len(charts) - 1),
                                            'left': 0.04, 'right': 0.96, 'bottom': 0.09, 'top': 0.99,
                                            'wspace': 0, 'hspace': 0.05, })
     for n, ax in enumerate([data[chart].plot(ax=fig) for fig, chart in zip(figures, charts)]):
