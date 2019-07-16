@@ -71,6 +71,7 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT, days: int = 0, f
                               gridspec_kw={'height_ratios': (len(charts) - 1,) + (1,) * (len(charts) - 1),
                                            'left': 0.04, 'right': 0.96, 'bottom': 0.09, 'top': 0.99,
                                            'wspace': 0, 'hspace': 0.05, })
+
     for n, ax in enumerate([data[chart].plot(ax=fig) for fig, chart in zip(figures, charts)]):
         ax.set(facecolor='xkcd:off white')  # set background color
         ax.grid(b=True)  # show grid-lines
