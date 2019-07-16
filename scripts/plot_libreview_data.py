@@ -16,6 +16,7 @@ from matplotlib import style as style
 style.use('bmh')  # set style
 rc('font', size=8)  # set font size
 rc('lines', linewidth=1)  # set line width
+TS_FORMAT = '%d-%m-%Y %H:%M'
 
 
 def getfilename():
@@ -28,7 +29,7 @@ def getfilename():
     return fn
 
 
-def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int = 0) -> None:
+def plot(filename: str = '', timestamp_format: str = TS_FORMAT, days: int = 0, filter_data: bool = False) -> None:
     with open(filename or getfilename(), 'r') as raw:
         data = pd.read_csv(raw, header=1, converters={2: lambda x: dt.strptime(x, timestamp_format)}, index_col=2)
 
@@ -42,6 +43,9 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
     min_date = max(earliest_date, latest_date - td(days=days or 91))  # adjust min date to show default 13 weeks
     if not days:
         min_date += td(days=(0, 6, 5, 4, 3, 2, 1,)[min_date.weekday()])  # align min date to a week start (monday)
+    if filter_data:
+        data = data.loc[min_date:latest_date]
+        earliest_date = min_date
     all_days = tuple(pd.date_range(start=earliest_date, end=latest_date, freq='1D'))
     weekends = tuple(d for d in all_days if d.isoweekday() in (6, 7))
 
@@ -118,15 +122,18 @@ def plot(filename: str = '', timestamp_format: str = '%d-%m-%Y %H:%M', days: int
 
 
 if __name__ == '__main__':
-    from sys import argv
+    from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
+
+    parser = ArgumentParser(description='plot FreeStyle Libre data', formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-f', '--filename', help='FreeStyle Libre download data csv file')
+    parser.add_argument('-t', '--timestamp_format', default=TS_FORMAT, help='timestamp field format')
+    parser.add_argument('-d', '--days', type=int, default=0, help='number of days to show')
+    parser.add_argument('--filter_data', action='store_true', help='filter data to days to show')
+
+    args = parser.parse_args()
 
     try:
-        if len(argv) == 1:
-            plot()
-        elif len(argv) == 2:
-            plot(filename=argv[1])
-        elif len(argv) == 3:
-            plot(filename=argv[1], days=int(argv[2]))
+        plot(**vars(args))
     except Exception as e:
         import traceback
 
