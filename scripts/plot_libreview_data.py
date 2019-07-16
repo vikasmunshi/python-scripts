@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
     plot blood glucose levels, stats, and trend from a downloaded LibreView data file
-    requires: numpy pandas matplotlib mplcursors
+    requires: numpy pandas matplotlib
     note: calling tk.Tk() after importing pyplot from matplotlib causes NSInvalidArgumentException
 """
 from datetime import datetime as dt, timedelta as td
@@ -17,6 +17,8 @@ style.use('bmh')  # set style
 rc('font', size=8)  # set font size
 rc('lines', linewidth=1)  # set line width
 TS_FORMAT = '%d-%m-%Y %H:%M'
+TARGET_MIN = 3.9
+TARGET_MAX = 6.8
 
 
 def getfilename():
@@ -33,13 +35,15 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT, days: int = 0, f
     with open(filename or getfilename(), 'r') as raw:
         data = pd.read_csv(raw, header=1, converters={2: lambda x: dt.strptime(x, timestamp_format)}, index_col=2)
 
-    data = data[['Record Type', 'Historic Glucose mmol/L', 'Scan Glucose mmol/L']].sort_index()
-    data.index.names = ('datetime',)
-    data.columns = ('type', 'historic', 'scan')
-    data['glucose'] = data.historic.where(data.type == 0, data.scan)
-    data = data[(data.type == 0) | (data.type == 1)][['glucose']]
+    data = data[['Record Type', 'Historic Glucose mmol/L', 'Scan Glucose mmol/L']]  # drop unused columns
+    data.index.names = ('datetime',)  # rename index
+    data.columns = ('type', 'historic', 'scan')  # rename columns
+    data['glucose'] = data.historic.where(data.type == 0, data.scan)  # merge values from historic and scan columns
+    data = data[(data.type == 0) | (data.type == 1)][['glucose']].dropna()  # drop unused rows
+    data = data[~data.index.duplicated(keep='last')].sort_index()  # remove duplicates and sort index
 
-    earliest_date, latest_date = data.index.min().date(), data.index.max().date() + td(days=1)  # min and max date range
+    earliest_date = data.index.min().date()  # min of date range
+    latest_date = data.index.max().date() + td(days=1)  # max date range
     min_date = max(earliest_date, latest_date - td(days=days or 91))  # adjust min date to show default 13 weeks
     if not days:
         min_date += td(days=(0, 6, 5, 4, 3, 2, 1,)[min_date.weekday()])  # align min date to a week start (monday)
@@ -49,17 +53,17 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT, days: int = 0, f
     all_days = tuple(pd.date_range(start=earliest_date, end=latest_date, freq='1D'))
     weekends = tuple(d for d in all_days if d.isoweekday() in (6, 7))
 
-    daily_data = data['glucose'].groupby(data.index.date)
+    re_sampled_data = data.resample('min').interpolate(method='time')  # resample data to 1 minute interval
+    daily_data = re_sampled_data.groupby(re_sampled_data.index.date)
     data['daily max'] = daily_data.transform(max)
     data['daily average'] = daily_data.transform(mean)
     data['daily min'] = daily_data.transform(min)
-    data['daily range'] = data['daily max'] - data['daily min']
+    data['daily range'] = daily_data.transform(lambda r: max(r) - min(r))
     data['daily stddev'] = daily_data.transform(pstdev)
-    minute_data = data['glucose'].resample('5T').transform(lambda v: v.between(3.9, 6.8, inclusive=True))
-    daily_minute_data = minute_data.groupby(data.index.date)
-    data['% in target'] = (daily_minute_data.transform(sum) / daily_minute_data.transform(len)) * 100
+    data['% in target'] = (daily_data.transform(lambda r: sum(r.between(TARGET_MIN, TARGET_MAX, inclusive=True))) /
+                           daily_data.transform(len)) * 100
     for rolling_window in ('24h', '7d', '91d'):
-        data['%s rolling average' % rolling_window] = data.glucose.rolling(rolling_window).mean()
+        data['%s rolling average' % rolling_window] = re_sampled_data.glucose.rolling(rolling_window).mean()
 
     # need to import late to avoid exception due to conflict with tkinter
     from matplotlib import pyplot as plt
@@ -93,8 +97,8 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT, days: int = 0, f
         for w in weekends:
             ax.axvspan(w, w + td(days=1), color='xkcd:light tan')  # vertical band for weekends
         if n in (0, 2):
-            ax.axhspan(ymin=3.9, ymax=6.8, color='xkcd:lime green')  # highlight target glucose range
-            ax.axhspan(ymin=0, ymax=3.9, color='xkcd:light orange')  # highlight low glucose range
+            ax.axhspan(ymin=TARGET_MIN, ymax=TARGET_MAX, color='xkcd:lime green')  # highlight target glucose range
+            ax.axhspan(ymin=0, ymax=TARGET_MIN, color='xkcd:light orange')  # highlight low glucose range
         if n == 1:
             ax.axhspan(ymin=90.0, ymax=100.0, color='xkcd:lime green')  # highlight > 90% in target range
         if n == 0:

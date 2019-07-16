@@ -27,6 +27,7 @@ setup(
                 'scipy>=1.3.0',
                 'networkx>=2.3',
                 'neo4j>=1.7.4',
+                'numba>=0.44.1',
         ],
         license='MIT License',
         platforms=['any'],
