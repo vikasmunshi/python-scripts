@@ -45,7 +45,7 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
 
     earliest_date = data.index.min().date()  # min of date range
     latest_date = data.index.max().date() + td(days=0 if discard_last_date else 1)  # max date range
-    min_date = max(earliest_date, latest_date - td(days=days or 91))  # adjust min date to show default 13 weeks
+    min_date = max(earliest_date, latest_date - td(days=days or 182))  # adjust min date to show default 26 weeks
     if not days:
         min_date += td(days=(0, 6, 5, 4, 3, 2, 1,)[min_date.weekday()])  # align min date to a week start (monday)
     if filter_data:
@@ -74,8 +74,8 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
     # noinspection PyTypeChecker,SpellCheckingInspection
     _, figures = plt.subplots(nrows=len(charts), ncols=1, sharex=True,
                               gridspec_kw={'height_ratios': (len(charts) - 1,) + (1,) * (len(charts) - 1),
-                                           'left': 0.04, 'right': 0.96, 'bottom': 0.09, 'top': 0.99,
-                                           'wspace': 0, 'hspace': 0.05, })
+                                           'left': 0.05, 'right': 0.95, 'bottom': 0.1, 'top': 0.95,
+                                           'wspace': 0, 'hspace': 0.15, })
 
     for n, ax in enumerate([data[chart].plot(ax=fig) for fig, chart in zip(figures, charts)]):
         ax.set(facecolor='xkcd:off white')  # set background color
@@ -88,11 +88,11 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
         _, legend = ax.get_legend_handles_labels()
         y_min = (min(data.loc[min_date:latest_date][legend].min().min().astype(int), 2)) if n != 1 else 0
         y_max = (data.loc[min_date:latest_date][legend].max().max().astype(int) + 2) if n != 1 else 100
-        ax.set_yticks(range(0, y_max, int((y_max - y_min) / (10 if n == 0 else 4))))  # y axis min, max, and ticks
+        ax.set_yticks(range(0, y_max + 1, int((y_max - y_min) / (10 if n == 0 else 4))))  # y axis min, max, and ticks
         ax.set_ylim(bottom=y_min, top=y_max)  # set y axis min and max range to show
         ax.set(xlabel='', ylabel='mmol/L' if n != 1 else '%')  # set axis label
         ax.tick_params(axis='y', labelright=True, right=True, left=True, direction='out')  # set y tick params
-        ax.legend(ncol=len(legend), framealpha=0.5, loc='upper right')  # legend format
+        ax.legend(ncol=len(legend), framealpha=0.5, loc='upper right' if n != 1 else 'lower right')  # legend format
         for i, label in enumerate(ax.xaxis.get_ticklabels()):
             label.set_horizontalalignment('left')  # align label left of tick
         for w in weekends:
