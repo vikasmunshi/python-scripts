@@ -88,7 +88,7 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
         _, legend = ax.get_legend_handles_labels()
         y_min = (min(data.loc[min_date:latest_date][legend].min().min().astype(int), 2)) if n != 1 else 0
         y_max = (data.loc[min_date:latest_date][legend].max().max().astype(int) + 2) if n != 1 else 100
-        ax.set_yticks(range(0, y_max + 1, int((y_max - y_min) / (10 if n == 0 else 4))))  # y axis min, max, and ticks
+        ax.set_yticks(range(0, y_max + 1, int((y_max - y_min) / (10 if n == 0 else 4)) or 1))  # y axis ticks
         ax.set_ylim(bottom=y_min, top=y_max)  # set y axis min and max range to show
         ax.set(xlabel='', ylabel='mmol/L' if n != 1 else '%')  # set axis label
         ax.tick_params(axis='y', labelright=True, right=True, left=True, direction='out')  # set y tick params
