@@ -6,7 +6,7 @@
     note: calling tk.Tk() after importing pyplot from matplotlib causes NSInvalidArgumentException
 """
 from datetime import datetime as dt, timedelta as td
-from statistics import mean, pstdev
+from statistics import median, pstdev
 
 import pandas as pd
 from matplotlib import dates as md
@@ -19,6 +19,7 @@ rc('lines', linewidth=1)  # set line width
 TS_FORMAT = '%d-%m-%Y %H:%M'
 TARGET_MIN = 3.9
 TARGET_MAX = 6.8
+HIGH_GLUCOSE = 13.0
 
 
 def getfilename():
@@ -57,7 +58,7 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
     re_sampled_data = data.resample('min').interpolate(method='time')  # resample data to 1 minute interval
     daily_data = re_sampled_data.groupby(re_sampled_data.index.date)
     data['daily max'] = daily_data.transform(max)
-    data['daily average'] = daily_data.transform(mean)
+    data['daily median'] = daily_data.transform(median)
     data['daily min'] = daily_data.transform(min)
     data['daily range'] = data['daily max'] - data['daily min']
     data['daily stddev'] = daily_data.transform(pstdev)
@@ -68,8 +69,8 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
 
     # need to import late to avoid exception due to conflict with tkinter
     from matplotlib import pyplot as plt
-    charts = (['% in target'], ['daily max', 'daily average', 'daily min'], ['daily range', 'daily stddev'])
-    charts = ([c for c in data.columns if c not in (i for s in charts for i in s)],) + charts
+    charts = [[], ['% in target'], ['daily max', 'daily median', 'daily min'], ['daily range', 'daily stddev']]
+    charts[0] = [c for c in data.columns if c not in (i for s in charts for i in s)]
 
     # noinspection PyTypeChecker,SpellCheckingInspection
     _, figures = plt.subplots(nrows=len(charts), ncols=1, sharex=True,
@@ -77,7 +78,9 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
                                            'left': 0.05, 'right': 0.95, 'bottom': 0.1, 'top': 0.95,
                                            'wspace': 0, 'hspace': 0.15, })
 
-    for n, ax in enumerate([data[chart].plot(ax=fig) for fig, chart in zip(figures, charts)]):
+    plots = [data[chart].plot(ax=fig) for fig, chart in zip(figures, charts)]
+
+    for n, ax in enumerate(plots):
         ax.set(facecolor='xkcd:off white')  # set background color
         ax.grid(b=True)  # show grid-lines
         ax.margins(x=0, y=0.05)  # adjust figure margins
@@ -100,8 +103,10 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
         if n in (0, 2):
             ax.axhspan(ymin=TARGET_MIN, ymax=TARGET_MAX, color='xkcd:lime green')  # highlight target glucose range
             ax.axhspan(ymin=0, ymax=TARGET_MIN, color='xkcd:light orange')  # highlight low glucose range
+            ax.axhspan(ymin=HIGH_GLUCOSE, ymax=y_max, color='xkcd:light orange')  # highlight high glucose range
         if n == 1:
             ax.axhspan(ymin=90.0, ymax=100.0, color='xkcd:lime green')  # highlight > 90% in target range
+            ax.axhspan(ymin=0.0, ymax=25.0, color='xkcd:light orange')  # highlight < 25% in target range
         if n == 0:
             for d in all_days:
                 # vertical line every six hours highlighted by white on both sides
