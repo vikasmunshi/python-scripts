@@ -59,7 +59,7 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
     data['daily max'] = daily_data.transform(max)
     data['daily average'] = daily_data.transform(mean)
     data['daily min'] = daily_data.transform(min)
-    data['daily range'] = daily_data.transform(lambda r: max(r) - min(r))
+    data['daily range'] = data['daily max'] - data['daily min']
     data['daily stddev'] = daily_data.transform(pstdev)
     data['% in target'] = (daily_data.transform(lambda r: sum(r.between(TARGET_MIN, TARGET_MAX, inclusive=True))) /
                            daily_data.transform(len)) * 100
