@@ -76,25 +76,26 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
     _, figures = plt.subplots(nrows=len(charts), ncols=1, sharex=True,
                               gridspec_kw={'height_ratios': (len(charts) - 1,) + (1,) * (len(charts) - 1),
                                            'left': 0.05, 'right': 0.95, 'bottom': 0.1, 'top': 0.95,
-                                           'wspace': 0, 'hspace': 0.15, })
+                                           'wspace': 0.0, 'hspace': 0.05, })
 
     plots = [data[chart].plot(ax=fig) for fig, chart in zip(figures, charts)]
 
     for n, ax in enumerate(plots):
-        ax.set(facecolor='xkcd:off white')  # set background color
+        ax.set(facecolor='xkcd:white')  # set background color
         ax.grid(b=True)  # show grid-lines
         ax.margins(x=0, y=0.05)  # adjust figure margins
-        ax.tick_params(axis='x', rotation=90, bottom=True, top=False, direction='out')  # set x tick params
+        ax.tick_params(axis='x', rotation=90, bottom=True, top=True, direction='in')  # set x tick params
         ax.xaxis.set_major_locator(md.DayLocator())  # set x axis major grid to date
-        ax.xaxis.set_major_formatter(md.DateFormatter('%b-%d'))  # set x axis label format
+        ax.xaxis.set_major_formatter(md.DateFormatter('%Y%m%d'))  # set x axis label format
         ax.set_xlim(left=min_date, right=latest_date)  # set x axis min and max range to show
         _, legend = ax.get_legend_handles_labels()
         y_min = (min(data.loc[min_date:latest_date][legend].min().min().astype(int), 2)) if n != 1 else 0
         y_max = (data.loc[min_date:latest_date][legend].max().max().astype(int) + 2) if n != 1 else 100
         ax.set_yticks(range(0, y_max + 1, int((y_max - y_min) / (10 if n == 0 else 4)) or 1))  # y axis ticks
-        ax.set_ylim(bottom=y_min, top=y_max)  # set y axis min and max range to show
+        ax.set_ylim(bottom=y_min, top=y_max + (1 if n != 1 else 10))  # set y axis min and max range to show
         ax.set(xlabel='', ylabel='mmol/L' if n != 1 else '%')  # set axis label
-        ax.tick_params(axis='y', labelright=True, right=True, left=True, direction='out')  # set y tick params
+        ax.tick_params(axis='y', labelright=True, right=True, labelleft=False, left=False,
+                       direction='out')  # set y tick params
         ax.legend(ncol=len(legend), framealpha=0.5, loc='upper right' if n != 1 else 'lower right')  # legend format
         for i, label in enumerate(ax.xaxis.get_ticklabels()):
             label.set_horizontalalignment('left')  # align label left of tick
