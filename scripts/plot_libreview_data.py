@@ -104,7 +104,7 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
         if n in (0, 2):
             ax.axhspan(ymin=TARGET_MIN, ymax=TARGET_MAX, color='xkcd:lime green')  # highlight target glucose range
             ax.axhspan(ymin=0, ymax=TARGET_MIN, color='xkcd:light orange')  # highlight low glucose range
-            ax.axhspan(ymin=HIGH_GLUCOSE, ymax=y_max, color='xkcd:light orange')  # highlight high glucose range
+            ax.axhspan(ymin=HIGH_GLUCOSE, ymax=y_max + 1, color='xkcd:light orange')  # highlight high glucose range
         if n == 1:
             ax.axhspan(ymin=90.0, ymax=100.0, color='xkcd:lime green')  # highlight > 90% in target range
             ax.axhspan(ymin=0.0, ymax=25.0, color='xkcd:light orange')  # highlight < 25% in target range
