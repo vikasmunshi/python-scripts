@@ -14,7 +14,7 @@ from matplotlib import rc as rc
 from matplotlib import style as style
 
 style.use('bmh')  # set style
-rc('font', size=8)  # set font size
+rc('font', size=6)  # set font size
 rc('lines', linewidth=1)  # set line width
 TS_FORMAT = '%d-%m-%Y %H:%M'
 TARGET_MIN = 3.9
@@ -37,11 +37,10 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
     with open(filename or getfilename(), 'r') as raw:
         data = pd.read_csv(raw, header=1, converters={2: lambda x: dt.strptime(x, timestamp_format)}, index_col=2)
 
-    data = data[['Record Type', 'Historic Glucose mmol/L', 'Scan Glucose mmol/L']]  # drop unused columns
+    data = data[['Record Type', 'Historic Glucose mmol/L']]  # drop unused columns
     data.index.names = ('datetime',)  # rename index
-    data.columns = ('type', 'historic', 'scan')  # rename columns
-    data['glucose'] = data.historic.where(data.type == 0, data.scan)  # merge values from historic and scan columns
-    data = data[(data.type == 0) | (data.type == 1)][['glucose']].dropna()  # drop unused rows
+    data.columns = ('type', 'glucose')  # rename columns
+    data = data[(data.type == 0)][['glucose']].dropna()  # drop unused rows and drop record type column
     data = data[~data.index.duplicated(keep='last')].sort_index()  # remove duplicates and sort index
 
     earliest_date = data.index.min().date()  # min of date range
@@ -75,7 +74,7 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
     # noinspection PyTypeChecker,SpellCheckingInspection
     _, figures = plt.subplots(nrows=len(charts), ncols=1, sharex=True,
                               gridspec_kw={'height_ratios': (len(charts) - 1,) + (1,) * (len(charts) - 1),
-                                           'left': 0.05, 'right': 0.95, 'bottom': 0.1, 'top': 0.95,
+                                           'left': 0.05, 'right': 0.95, 'bottom': 0.05, 'top': 0.95,
                                            'wspace': 0.0, 'hspace': 0.05, })
 
     plots = [data[chart].plot(ax=fig) for fig, chart in zip(figures, charts)]
@@ -86,7 +85,7 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
         ax.margins(x=0, y=0.05)  # adjust figure margins
         ax.tick_params(axis='x', rotation=90, bottom=True, top=True, direction='in')  # set x tick params
         ax.xaxis.set_major_locator(md.DayLocator())  # set x axis major grid to date
-        ax.xaxis.set_major_formatter(md.DateFormatter('%Y%m%d'))  # set x axis label format
+        ax.xaxis.set_major_formatter(md.DateFormatter('%m-%d'))  # set x axis label format
         ax.set_xlim(left=min_date, right=latest_date)  # set x axis min and max range to show
         _, legend = ax.get_legend_handles_labels()
         y_min = (min(data.loc[min_date:latest_date][legend].min().min().astype(int), 2)) if n != 1 else 0
