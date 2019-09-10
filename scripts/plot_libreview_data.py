@@ -34,6 +34,7 @@ def getfilename():
 
 def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
          days: int = 0, filter_data: bool = False, discard_last_date: bool = False) -> None:
+    # read file into DataFrame data
     with open(filename or getfilename(), 'r') as raw:
         data = pd.read_csv(raw, header=1, converters={2: lambda x: dt.strptime(x, timestamp_format)}, index_col=2)
 
