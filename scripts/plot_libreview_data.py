@@ -107,7 +107,7 @@ def plot(filename: str = '', timestamp_format: str = TS_FORMAT,
             ax.axhspan(ymin=HIGH_GLUCOSE, ymax=y_max + 1, color='xkcd:light orange')  # highlight high glucose range
         if n == 1:
             ax.axhspan(ymin=90.0, ymax=100.0, color='xkcd:lime green')  # highlight > 90% in target range
-            ax.axhspan(ymin=0.0, ymax=25.0, color='xkcd:light orange')  # highlight < 25% in target range
+            ax.axhspan(ymin=0.0, ymax=50.0, color='xkcd:light orange')  # highlight < 25% in target range
         if n == 0:
             for d in all_days:
                 # vertical line every six hours highlighted by white on both sides
